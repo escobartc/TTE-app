@@ -40,19 +40,3 @@ public class Product {
     private Rating rating;
 }
 
-@Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-class Rating {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "rate")
-    private double rate;
-
-    @Column(name = "count")
-    private int count;
-}
