@@ -10,7 +10,9 @@ import lombok.Setter;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Entity
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

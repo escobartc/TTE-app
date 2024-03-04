@@ -25,13 +25,12 @@ public class AdminServiceImpl implements LegacyAdmin {
         return new ResponseEntity<>(validationError.getStructureError((HttpStatus.BAD_REQUEST.value()),
                     "Email exist in database",""), HttpStatus.BAD_REQUEST);
         }
-
         if (adminRepository.findElement(user.getUsername()) != null){
             loggerPrinter.log(LogLevel.WARN,"Username duplicated");
             return new ResponseEntity<>(validationError.getStructureError((HttpStatus.BAD_REQUEST.value()),
                     "Username exist in database",""), HttpStatus.BAD_REQUEST);
         }
-        if(user.getRole() == "Employee"){
+        if(!user.getRole().equals("Employee")){
             loggerPrinter.log(LogLevel.WARN,"invalid role");
             return new ResponseEntity<>(validationError.getStructureError((HttpStatus.BAD_REQUEST.value()),
                     "invalid role",""), HttpStatus.BAD_REQUEST);
