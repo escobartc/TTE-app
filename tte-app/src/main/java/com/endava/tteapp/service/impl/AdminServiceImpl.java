@@ -1,10 +1,12 @@
 package com.endava.tteapp.service.impl;
 
 import com.endava.tteapp.LoggerPrinter;
+import com.endava.tteapp.model.Product;
 import com.endava.tteapp.model.DTO.UserDTO;
 import com.endava.tteapp.model.User;
 import com.endava.tteapp.processor.ValidationError;
 import com.endava.tteapp.repository.AdminRepository;
+import com.endava.tteapp.repository.ProductRepository;
 import com.endava.tteapp.service.LegacyAdmin;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class AdminServiceImpl implements LegacyAdmin {
 
     final AdminRepository adminRepository;
+    final ProductRepository productRepository;
     final ValidationError validationError;
     public ResponseEntity<Object> saveUser(UserDTO userDTO, LoggerPrinter loggerPrinter) {
         User user = new User();
@@ -42,5 +45,22 @@ public class AdminServiceImpl implements LegacyAdmin {
         User response = adminRepository.save(user);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
         }
+
+    public ResponseEntity<Object> saveProduct(Product product, LoggerPrinter loggerPrinter) {
+        loggerPrinter.log(LogLevel.INFO, "Save Product in Database");
+        // Validate product data if needed
+        // Checking if the product title is not empty
+        if (product.getTitle() == null || product.getTitle().isEmpty()) {
+            loggerPrinter.log(LogLevel.ERROR, "Product title cannot be empty");
+            return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
+                    "Product title cannot be empty"), HttpStatus.BAD_REQUEST);
+        }
+
+        // Save the product
+        Product savedProduct = productRepository.save(product);
+
+        // Return response
+        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
+}
 
