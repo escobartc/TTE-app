@@ -1,6 +1,7 @@
 package com.endava.tteapp.controller;
 
 import com.endava.tteapp.LoggerPrinter;
+import com.endava.tteapp.model.DTO.UserDTO;
 import com.endava.tteapp.model.Product;
 import com.endava.tteapp.model.Shopper;
 import com.endava.tteapp.model.User;
@@ -11,10 +12,7 @@ import org.springframework.boot.logging.LogLevel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.util.HashMap;
@@ -31,12 +29,11 @@ import static com.endava.tteapp.model.constant.constant.WEB;
 public class AdminController {
 
     private final LegacyAdmin adminService;
-
-    @PostMapping(path = "/admin/auth", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Object> createUser(@RequestBody User user) {
+    @PostMapping(path= "/admin/auth", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Object> createUser(@RequestBody UserDTO userDTO) {
         LoggerPrinter loggerPrinter = new LoggerPrinter(NAME, UUID.randomUUID().toString(), WEB, "");
         loggerPrinter.log(LogLevel.INFO, "JOIN TO TTE-APP");
-        return adminService.saveUser(user, loggerPrinter);
+        return adminService.saveUser(userDTO, loggerPrinter);
     }
 
     @PostMapping("/auth")

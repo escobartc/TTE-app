@@ -12,7 +12,4 @@ public class ErrorModel {
     @JsonProperty("message")
     private String message;
 
-    @JsonProperty("IdError")
-    private String idError;
-
 }
