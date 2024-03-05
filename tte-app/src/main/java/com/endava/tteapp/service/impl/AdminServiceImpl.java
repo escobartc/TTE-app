@@ -1,11 +1,13 @@
 package com.endava.tteapp.service.impl;
 
 import com.endava.tteapp.LoggerPrinter;
+import com.endava.tteapp.model.DTO.UserDTO;
 import com.endava.tteapp.model.User;
 import com.endava.tteapp.processor.ValidationError;
 import com.endava.tteapp.repository.AdminRepository;
 import com.endava.tteapp.service.LegacyAdmin;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.http.HttpStatus;
@@ -18,22 +20,24 @@ public class AdminServiceImpl implements LegacyAdmin {
 
     final AdminRepository adminRepository;
     final ValidationError validationError;
-    public ResponseEntity<Object> saveUser(User user, LoggerPrinter loggerPrinter) {
+    public ResponseEntity<Object> saveUser(UserDTO userDTO, LoggerPrinter loggerPrinter) {
+        User user = new User();
+        BeanUtils.copyProperties(userDTO, user);
         loggerPrinter.log(LogLevel.INFO,"Save Information in Database");
         if (adminRepository.findElement(user.getEmail()) != null){
             loggerPrinter.log(LogLevel.WARN,"Email duplicated");
         return new ResponseEntity<>(validationError.getStructureError((HttpStatus.BAD_REQUEST.value()),
-                    "Email exist in database",""), HttpStatus.BAD_REQUEST);
+                    "Email exist in database"), HttpStatus.BAD_REQUEST);
         }
         if (adminRepository.findElement(user.getUsername()) != null){
             loggerPrinter.log(LogLevel.WARN,"Username duplicated");
             return new ResponseEntity<>(validationError.getStructureError((HttpStatus.BAD_REQUEST.value()),
-                    "Username exist in database",""), HttpStatus.BAD_REQUEST);
+                    "Username exist in database"), HttpStatus.BAD_REQUEST);
         }
         if(!user.getRole().equals("Employee")){
             loggerPrinter.log(LogLevel.WARN,"invalid role");
             return new ResponseEntity<>(validationError.getStructureError((HttpStatus.BAD_REQUEST.value()),
-                    "invalid role",""), HttpStatus.BAD_REQUEST);
+                    "invalid role"), HttpStatus.BAD_REQUEST);
         }
         User response = adminRepository.save(user);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
