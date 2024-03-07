@@ -1,4 +1,4 @@
-package com.challenge.tteapp.model.admin;
+package com.challenge.tteapp.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

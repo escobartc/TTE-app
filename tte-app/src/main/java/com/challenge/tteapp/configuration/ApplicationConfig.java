@@ -1,6 +1,9 @@
 package com.challenge.tteapp.configuration;
 
+import com.challenge.tteapp.model.Shopper;
+import com.challenge.tteapp.model.User;
 import com.challenge.tteapp.repository.AdminRepository;
+import com.challenge.tteapp.repository.ShopperRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,11 +16,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
     private final AdminRepository adminRepository;
+    private final ShopperRepository shopperRepository;
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception{
         return config.getAuthenticationManager();
@@ -36,7 +42,16 @@ public class ApplicationConfig {
     }
     @Bean
     public UserDetailsService userDetailService() {
-        return  username -> adminRepository.findByUsername(username)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+        return username -> {
+            Optional<User> adminOptional = adminRepository.findByUsername(username);
+            if (adminOptional.isPresent()) {
+                return adminOptional.get();
+            }
+            Optional<Shopper> shopperOptional = shopperRepository.findByUsername(username);
+            if (shopperOptional.isPresent()) {
+                return shopperOptional.get();
+            }
+            throw new UsernameNotFoundException("User not found");
+        };
     }
 }
