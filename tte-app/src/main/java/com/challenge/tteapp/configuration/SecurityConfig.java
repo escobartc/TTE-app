@@ -29,6 +29,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/admin/create").permitAll()
                                 .requestMatchers("/api/admin/login").permitAll()
                                 .requestMatchers("/api/product").permitAll()
+                                .requestMatchers("/api/auth").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(sessionManager->

@@ -4,8 +4,9 @@ import com.challenge.tteapp.model.User;
 import com.challenge.tteapp.model.UserResponse;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
-import com.challenge.tteapp.model.admin.TokenRequest;
+import com.challenge.tteapp.model.TokenRequest;
 import com.challenge.tteapp.model.dto.UserDTO;
+import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.repository.AdminRepository;
 import com.challenge.tteapp.service.AuthService;
@@ -16,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,10 +26,10 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final AdminRepository adminRepository;
-    private final ValidationError validationError;
     private final JwtServiceImpl jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final ValidationResponse validationResponse;
 
 
     public ResponseEntity<Object> register(UserDTO userDTO, String requestId) {
@@ -56,18 +56,13 @@ public class AuthServiceImpl implements AuthService {
     private ResponseEntity<Object> validationInfo(User user, String requestId){
         log.info("Save information in database, requestId: {}", requestId);
         if (adminRepository.findElement(user.getEmail()) != null) {
-            return createDuplicateResponse("Email", requestId);
+            return validationResponse.createDuplicateResponse("Email", requestId);
         }
         if (adminRepository.findElement(user.getUsername()) != null) {
-            return createDuplicateResponse("Username", requestId);
+            return validationResponse.createDuplicateResponse("Username", requestId);
         }
         adminRepository.save(user);
         return new ResponseEntity<>(createUserResponse(user), HttpStatus.CREATED);
-    }
-    private ResponseEntity<Object> createDuplicateResponse(String field, String requestId) {
-        log.warn("{} duplicated, requestId: {}", field, requestId);
-        return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
-                field + " exist in database"), HttpStatus.BAD_REQUEST);
     }
     private UserResponse createUserResponse(User user) {
         UserResponse userResponse = new UserResponse();
