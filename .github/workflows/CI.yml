@@ -37,6 +37,9 @@ jobs:
       - name: Enter tte-app folder
         run: cd /home/runner/work/TTE-app/TTE-app
 
+      - name:  look
+        run: ls
+
       - name: Build with Maven
         run: mvn clean package
 
