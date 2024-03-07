@@ -3,6 +3,7 @@ package com.challenge.tteapp.controller;
 import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.dto.ProductDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
 import com.challenge.tteapp.service.AuthService;
 import com.challenge.tteapp.service.LegacyAdmin;
@@ -52,7 +53,7 @@ public class AdminController {
     }
 
     @PostMapping(path = "/product", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> createProduct(@RequestBody Product product) {
+    public ResponseEntity<Object> createProduct(@RequestBody ProductDTO product) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP with requestId: {}", requestId);
         ResponseEntity<Object> response = adminService.saveProduct(product, requestId);
