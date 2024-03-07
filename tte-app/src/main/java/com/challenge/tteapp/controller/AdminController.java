@@ -1,29 +1,27 @@
 package com.challenge.tteapp.controller;
 
-import com.challenge.tteapp.LoggerPrinter;
-import com.challenge.tteapp.service.AuthService;
+import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.dto.ProductDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
-import com.challenge.tteapp.model.Product;
-import com.challenge.tteapp.model.Shopper;
+import com.challenge.tteapp.service.AuthService;
 import com.challenge.tteapp.service.LegacyAdmin;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.logging.LogLevel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-
-import static com.challenge.tteapp.model.constant.Constant.NAME;
-import static com.challenge.tteapp.model.constant.Constant.WEB;
 
 @RestController
 @RequestMapping("${service.controller.path}")
@@ -55,10 +53,10 @@ public class AdminController {
     }
 
     @PostMapping(path = "/product", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> createProduct(@RequestBody Product product) {
-        LoggerPrinter loggerPrinter = new LoggerPrinter(NAME, UUID.randomUUID().toString(), WEB, "");
-        loggerPrinter.log(LogLevel.INFO, "Creating a new product");
-        ResponseEntity<Object> response = adminService.saveProduct(product, loggerPrinter);
+    public ResponseEntity<Object> createProduct(@RequestBody ProductDTO product) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP with requestId: {}", requestId);
+        ResponseEntity<Object> response = adminService.saveProduct(product, requestId);
         Long productId = null;
         if (response.getStatusCode() == HttpStatus.CREATED) {
             productId = ((Product) Objects.requireNonNull(response.getBody())).getId();

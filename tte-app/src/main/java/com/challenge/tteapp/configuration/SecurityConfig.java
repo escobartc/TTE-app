@@ -28,6 +28,7 @@ public class SecurityConfig {
                         authRequest
                                 .requestMatchers("/api/admin/create").permitAll()
                                 .requestMatchers("/api/admin/login").permitAll()
+                                .requestMatchers("/api/product").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(sessionManager->
