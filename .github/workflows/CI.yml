@@ -35,7 +35,7 @@ jobs:
           java-version: '17'
 
       - name: Enter tte-app folder
-        run: cd tte-app
+        run: cd TTE-app/tte-app
 
       - name: Build with Maven
         run: mvn clean package
