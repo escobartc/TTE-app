@@ -35,9 +35,15 @@ jobs:
           java-version: '17'
 
       - name: Enter tte-app folder
-        run: cd /home/runner/work/TTE-app/TTE-app/tte-app
+        run: cd /home/runner/work/TTE-app/TTE-app
 
       - name:  look
+        run: ls
+
+      - name: Enter tte-app folder
+        run: cd tte-app
+
+      - name: look
         run: ls
 
       - name: Build with Maven
