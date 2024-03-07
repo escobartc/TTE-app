@@ -1,0 +1,19 @@
+spring:
+  banner:
+    location: classpath:logo.ascii
+  datasource:
+    url: ${URL}
+    password: ${PASSWORD}
+    username: ${USERNAME}
+  application:
+    name: tech-trend-emporium
+service:
+  dateFormat: yyyy-MM-dd hh:mm:ss
+  controller:
+    path: /api
+server:
+  port: ${PORT}
+data:
+  secretKey: ${SECRET_KEY}
+
+
