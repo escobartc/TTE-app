@@ -34,20 +34,14 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
 
-      - name: Enter tte-app folder
-        run: cd /home/runner/work/TTE-app/TTE-app
-
-      - name:  look
-        run: ls
-
-      - name: Enter tte-app folder
-        run: cd tte-app
+      - name: Change to project directory
+        run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
       - name: look
         run: ls
 
       - name: Build with Maven
-        run: mvn clean package
+        run: mvn -f /home/runner/work/TTE-app/TTE-app/tte-app/pom.xml clean package
 
       - name: Build Docker image
         run: |
