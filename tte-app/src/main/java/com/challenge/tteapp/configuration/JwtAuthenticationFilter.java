@@ -33,6 +33,7 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         final String token = getTokenFromRequest(request);
         final String username;
         final String role;
+        final String endpoint;
 
         if (token == null) {
             filterChain.doFilter(request, response);
@@ -40,11 +41,12 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         }
         username = jwtService.getUsernameFromToken(token);
         role = jwtService.getRoleFromToken(token);
-
+        endpoint = request.getRequestURI();
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             if (jwtService.isTokenValid(token, userDetails)) {
-                if ("ADMIN".equals(role)) {
+                if (isAuthorized(role,endpoint)) {
+                    UserRoleContext.setRole(role);
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -52,12 +54,23 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado. Rol requerido: ADMIN");
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado. Rol requerido: ");
                     return;
                 }
             }
         }
         filterChain.doFilter(request, response);
+        UserRoleContext.clear();
+    }
+
+    private boolean isAuthorized(String role,String endpoint) {
+        if (endpoint.equals("/api/admin/auth")) {
+            return role.equals("ADMIN");
+        } else if (endpoint.equals("/api/product")) {
+            return role.equals("ADMIN") || role.equals("employee");
+        } else {
+            return false;
+        }
     }
 
     private String getTokenFromRequest(HttpServletRequest request){
