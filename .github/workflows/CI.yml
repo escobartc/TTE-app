@@ -30,12 +30,6 @@ jobs:
           export it_hash=$(git rev-parse --short "${GITHUB_SHA}")
           echo "Short commit hash: $it_hash"
 
-      # Get the branch name
-      - name: Get branch name
-        run: |
-          export git_branch=${GITHUB_REF#refs/heads/}
-          echo "Branch name: $git_branch"
-
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
@@ -68,7 +62,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t tech-trend-emporium-app:${it_hash} -f /home/runner/work/TTE-app/TTE-app/tte-app/Dockerfile .
+          docker build -t tech-trend-emporium-app:$it_hash -f /home/runner/work/TTE-app/TTE-app/tte-app/Dockerfile .
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -76,8 +70,8 @@ jobs:
 
       - name: Tag Docker image
         run: |
-          docker tag tech-trend-emporium-app:${it_hash} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${it_hash}
+          docker tag tech-trend-emporium-app:$it_hash ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:$it_hash
 
       - name: Push Docker image to Amazon ECR
         run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${it_hash}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:$it_hash
