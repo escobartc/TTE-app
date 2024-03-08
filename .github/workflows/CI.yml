@@ -48,7 +48,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t tech-trend-emporium-app:${{ github.sha }} .
+          docker build -t tech-trend-emporium-app:${{ github.sha }} -f /home/runner/work/TTE-app/TTE-app/tte-app/Dockerfile .
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
