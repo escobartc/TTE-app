@@ -11,9 +11,6 @@ ENV SECRET_KEY=$SECRET_KEY
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the compiled Spring Boot application JAR file into the container
-COPY target/tte-app-0.0.1-SNAPSHOT.jar /app/app.jar
-
 # Expose the port that your Spring Boot application runs on
 EXPOSE 8080
 
