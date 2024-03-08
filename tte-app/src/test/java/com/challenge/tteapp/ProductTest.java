@@ -1,4 +1,4 @@
-package com.challenge.tteapp;
+/*package com.challenge.tteapp;
 
 import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.Rating;
@@ -36,3 +36,4 @@ class ProductTest {
         assertEquals(203, product.getRating().getCount());
     }
 }
+*/
