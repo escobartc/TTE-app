@@ -13,5 +13,4 @@ public class RatingDTO {
     private Long id;
     private double averageRating;
     private int numberOfRatings;
-    // Other fields if needed
 }

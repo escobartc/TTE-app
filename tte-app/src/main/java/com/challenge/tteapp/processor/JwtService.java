@@ -1,4 +1,4 @@
-package com.challenge.tteapp.service.impl;
+package com.challenge.tteapp.processor;
 
 import com.challenge.tteapp.configuration.DataConfig;
 import io.jsonwebtoken.Claims;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class JwtServiceImpl {
+public class JwtService {
 
     private final DataConfig dataConfig;
 
@@ -38,7 +38,7 @@ public class JwtServiceImpl {
                 .setClaims(extraClaims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+1000*60*24))
+                .setExpiration(new Date(System.currentTimeMillis()+1000*60*30))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

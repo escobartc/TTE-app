@@ -30,6 +30,9 @@ public class SecurityConfig {
                                 .requestMatchers("/api/admin/login").permitAll()
                                 .requestMatchers("/api/product").permitAll()
                                 .requestMatchers("/api/auth").permitAll()
+                                .requestMatchers("/api/login").permitAll()
+                                .requestMatchers("/api/logout").permitAll()
+
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(sessionManager->

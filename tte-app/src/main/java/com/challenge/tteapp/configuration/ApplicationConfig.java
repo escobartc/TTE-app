@@ -1,9 +1,8 @@
 package com.challenge.tteapp.configuration;
 
-import com.challenge.tteapp.model.Shopper;
 import com.challenge.tteapp.model.User;
-import com.challenge.tteapp.repository.AdminRepository;
-import com.challenge.tteapp.repository.ShopperRepository;
+import com.challenge.tteapp.repository.ProductRepository;
+import com.challenge.tteapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +21,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
-    private final AdminRepository adminRepository;
-    private final ShopperRepository shopperRepository;
+    private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception{
         return config.getAuthenticationManager();
@@ -43,13 +42,9 @@ public class ApplicationConfig {
     @Bean
     public UserDetailsService userDetailService() {
         return username -> {
-            Optional<User> adminOptional = adminRepository.findByUsername(username);
+            Optional<User> adminOptional = userRepository.findByUsername(username);
             if (adminOptional.isPresent()) {
                 return adminOptional.get();
-            }
-            Optional<Shopper> shopperOptional = shopperRepository.findByUsername(username);
-            if (shopperOptional.isPresent()) {
-                return shopperOptional.get();
             }
             throw new UsernameNotFoundException("User not found");
         };

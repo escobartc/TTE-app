@@ -1,6 +1,6 @@
 package com.challenge.tteapp.configuration;
 
-import com.challenge.tteapp.service.impl.JwtServiceImpl;
+import com.challenge.tteapp.processor.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,7 @@ import java.io.IOException;
 
 public class JwtAuthenticationFilter  extends OncePerRequestFilter {
 
-    private final JwtServiceImpl jwtService;
+    private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
     @Override
