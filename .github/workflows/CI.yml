@@ -40,6 +40,9 @@ jobs:
       - name: Change to project directory
         run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
+      - name: Build with Maven
+        run: mvn -f /home/runner/work/TTE-app/TTE-app/tte-app/pom.xml clean package
+
       - name: Copy JAR file to Docker directory
         run: cp /home/runner/work/TTE-app/TTE-app/tte-app/target/tte-app-0.0.1-SNAPSHOT.jar /home/runner/work/TTE-app/TTE-app/tte-app/
 
