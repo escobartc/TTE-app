@@ -29,13 +29,8 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
 
-      - name: Print secret values
-        run: |
-            echo "DB_URL: $DB_URL"
-            echo "DB_PASSWORD: $DB_PASSWORD"
-            echo "DB_USERNAME: $DB_USERNAME"
-            echo "DB_PORT: $DB_PORT"
-            echo "SECRET_KEY: $SECRET_KEY"
+      - name: Change to project directory
+        run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
       - name: Set environment variables for secrets
         run: |
@@ -44,9 +39,6 @@ jobs:
           export DB_USERNAME="${{ secrets.DB_USERNAME }}"
           export DB_PORT="${{ secrets.DB_PORT }}"
           export SECRET_KEY="${{ secrets.SECRET_KEY }}"
-
-      - name: Change to project directory
-        run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
       - name: look
         run: ls
