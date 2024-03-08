@@ -16,11 +16,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DB_URL: ${{ secrets.DB_URL }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
@@ -33,6 +28,14 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '17'
+
+      - name: Set environment variables for secrets
+        run: |
+          export DB_URL="${{ secrets.DB_URL }}"
+          export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+          export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+          export DB_PORT="${{ secrets.DB_PORT }}"
+          export SECRET_KEY="${{ secrets.SECRET_KEY }}"
 
       - name: Change to project directory
         run: cd /home/runner/work/TTE-app/TTE-app/tte-app
