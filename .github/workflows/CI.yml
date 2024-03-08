@@ -65,4 +65,16 @@ jobs:
         run: |
           docker build -t tech-trend-emporium-app:${COMMIT_SHA} -f /home/runner/work/TTE-app/TTE-app/tte-app/Dockerfile .
 
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Tag Docker image
+        run: |
+          docker tag tech-trend-emporium-app:${COMMIT_SHA} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${COMMIT_SHA}
+
+      - name: Push Docker image to Amazon ECR
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${COMMIT_SHA}
+
       # ...
