@@ -29,6 +29,14 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
 
+      - name: Print secret values
+        run: |
+            echo "DB_URL: $DB_URL"
+            echo "DB_PASSWORD: $DB_PASSWORD"
+            echo "DB_USERNAME: $DB_USERNAME"
+            echo "DB_PORT: $DB_PORT"
+            echo "SECRET_KEY: $SECRET_KEY"
+
       - name: Set environment variables for secrets
         run: |
           export DB_URL="${{ secrets.DB_URL }}"
