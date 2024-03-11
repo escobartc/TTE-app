@@ -41,8 +41,9 @@ public class ApplicationConfig {
     }
     @Bean
     public UserDetailsService userDetailService() {
-        return username -> {
-            Optional<User> adminOptional = userRepository.findByUsername(username);
+        return email -> {
+            Optional<User> adminOptional = userRepository.findByEmail(email);
+            adminOptional.get().setUsername(adminOptional.get().getEmail());
             if (adminOptional.isPresent()) {
                 return adminOptional.get();
             }

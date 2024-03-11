@@ -1,9 +1,6 @@
 package com.challenge.tteapp.service.impl;
 
-import com.challenge.tteapp.model.LogInOutUser;
-import com.challenge.tteapp.model.TokenRequest;
-import com.challenge.tteapp.model.User;
-import com.challenge.tteapp.model.UserResponse;
+import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.dto.ShopperDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
@@ -36,12 +33,12 @@ public class UserServiceImpl implements UserService {
         public ResponseEntity<Object> loginUser(LogInOutUser logInOutUser, String requestId) {
             try {
                 log.info("Login user , requestId: [{}]", requestId);
-                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getUsername(), logInOutUser.getPassword()));
-                UserDetails userAuth = userRepository.findByUsername(logInOutUser.getUsername())
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
+                User userAuth = userRepository.findByEmail(logInOutUser.getEmail())
                         .orElseThrow();
                 TokenRequest token = new TokenRequest();
                 token.setToken(jwtService.getToken(userAuth));
-                User user = userRepository.findElement(logInOutUser.getUsername());
+                User user = userRepository.findElement(logInOutUser.getEmail());
                 if (user.getState().equals(1)) {
                     log.warn("The user is already logged in, requestId: {}", requestId);
                     return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
@@ -86,8 +83,8 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<Object> logoutUser(LogInOutUser logInOutUser, String requestId) {
         try {
             log.info("Logout user , requestId: [{}]", requestId);
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getUsername(), logInOutUser.getPassword()));
-            User user = userRepository.findElement(logInOutUser.getUsername());
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
+            User user = userRepository.findElement(logInOutUser.getEmail());
             if (user.getState().equals(1)) {
                 user.setState(0);
                 userRepository.save(user);
@@ -96,7 +93,7 @@ public class UserServiceImpl implements UserService {
                 return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
                         "The user is already logout"), HttpStatus.BAD_REQUEST);
             }
-            return new ResponseEntity<>("ok", HttpStatus.CREATED);
+            return new ResponseEntity<>(new Status("ok"), HttpStatus.CREATED);
 
         }catch (AuthenticationException e) {
             return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),

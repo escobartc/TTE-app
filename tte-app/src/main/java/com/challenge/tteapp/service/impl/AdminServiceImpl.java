@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -54,12 +55,17 @@ public class AdminServiceImpl implements AdminService {
         return validationInfo(user, requestId);
     }
     public ResponseEntity<Object> loginAdmin(LoginAdmin admin, String requestId) {
+        try {
         log.info("Login Admin , requestId: [{}]", requestId);
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getUsername(), admin.getPassword()));
-        UserDetails user = userRepository.findByUsername(admin.getUsername()).orElseThrow();
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getEmail(), admin.getPassword()));
+        User user = userRepository.findByEmail(admin.getEmail()).orElseThrow();
         TokenRequest token = new TokenRequest();
         token.setToken(jwtService.getToken(user));
         return new ResponseEntity<>(token,HttpStatus.CREATED);
+        }catch (AuthenticationException e) {
+            return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
+                    "Incorrect email or password"), HttpStatus.BAD_REQUEST);
+        }
     }
 
     private ResponseEntity<Object> validationInfo(User user, String requestId){
