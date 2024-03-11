@@ -1,13 +1,18 @@
 package com.challenge.tteapp.configuration;
 
 import com.challenge.tteapp.processor.JwtService;
+import com.challenge.tteapp.processor.ValidationError;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.el.util.Validation;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,6 +23,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static org.aspectj.bridge.MessageUtil.fail;
+
 @Component
 @RequiredArgsConstructor
 
@@ -25,25 +32,25 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final ValidationError validationError;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
-        final String token = getTokenFromRequest(request);
-        final String username;
-        final String role;
-        final String endpoint;
+            final String token = getTokenFromRequest(request);
+            final String email;
+            final String role;
+            final String endpoint;
 
         if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
-        username = jwtService.getUsernameFromToken(token);
+        email = jwtService.getUsernameFromToken(token);
         role = jwtService.getRoleFromToken(token);
         endpoint = request.getRequestURI();
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
             if (jwtService.isTokenValid(token, userDetails)) {
                 if (isAuthorized(role,endpoint)) {
                     UserRoleContext.setRole(role);
@@ -54,7 +61,10 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado. Rol requerido: ");
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    String jsonResponse = "{\"error\": \"Access denied\"}";
+                    response.getWriter().write(jsonResponse);
                     return;
                 }
             }

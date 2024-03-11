@@ -11,5 +11,4 @@ public interface AdminService {
     ResponseEntity<Object> registerAdmin(Admin admin, String requestId);
     ResponseEntity<Object> loginAdmin(LoginAdmin admin, String requestId);
 
-
 }

@@ -1,6 +1,7 @@
 package com.challenge.tteapp.processor;
 
 import com.challenge.tteapp.configuration.DataConfig;
+import com.challenge.tteapp.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -23,11 +24,11 @@ public class JwtService {
 
     private final DataConfig dataConfig;
 
-    public String getToken(UserDetails user) {
+    public String getToken(User user) {
         return getToken(new HashMap<>(), user);
     }
 
-    private String getToken(Map<String,Object> extraClaims, UserDetails user) {
+    private String getToken(Map<String,Object> extraClaims, User user) {
         Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
         List<String> roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
@@ -36,7 +37,7 @@ public class JwtService {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(user.getUsername())
+                .setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis()+1000*60*30))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
