@@ -35,10 +35,13 @@ public class Product {
     @Column(name = "image")
     private String image;
 
+    @Column(name = "state")
+    private String state;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "rating_id", referencedColumnName = "id")
     private Rating rating;
-    
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "inventory_id", referencedColumnName = "id")
     private Inventory inventory;

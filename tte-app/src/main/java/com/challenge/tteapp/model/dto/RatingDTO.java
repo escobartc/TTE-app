@@ -11,6 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RatingDTO {
     private Long id;
-    private double averageRating;
-    private int numberOfRatings;
+    private double rate;
+    private int count;
 }

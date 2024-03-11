@@ -11,5 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class InventoryDTO {
     private Long id;
-    private int quantity;
+    private int total;
+    private int available;
 }
