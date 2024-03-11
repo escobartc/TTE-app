@@ -7,12 +7,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.el.util.Validation;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,8 +18,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
-import static org.aspectj.bridge.MessageUtil.fail;
 
 @Component
 @RequiredArgsConstructor
@@ -76,7 +70,7 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     private boolean isAuthorized(String role,String endpoint) {
         if (endpoint.equals("/api/admin/auth")) {
             return role.equals("ADMIN");
-        } else if (endpoint.equals("/api/product")) {
+        } else if (endpoint.startsWith("/api/product")) {
             return role.equals("ADMIN") || role.equals("employee");
         } else {
             return false;
