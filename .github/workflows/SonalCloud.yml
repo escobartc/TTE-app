@@ -12,30 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          path: /home/runner/work/TTE-app/TTE-app  # Specify the correct path to checkout
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
-      - name: Echo
-        run: pwd
-
-      - name: Echo
-        run: ls
-
-      - name: List contents of the directory
-        run: ls -la /home/runner/work/TTE-app/TTE-app/tte-app
-
-      - name: List contents of the directory
-        run: cd /home/runner/work/TTE-app/TTE-app/tte-app
-
-      - name: List contents of the directory
-        run: ls
-
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: 17
           distribution: 'zulu' # Alternative distribution options are available.
-
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
@@ -49,7 +31,8 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Build and analyze
+        working-directory: /home/runner/work/TTE-app/TTE-app/tte-app
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=escobartc_TTE-app
