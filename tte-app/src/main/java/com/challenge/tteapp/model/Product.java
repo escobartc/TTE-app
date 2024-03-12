@@ -29,8 +29,9 @@ public class Product {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "category")
-    private String category;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @Column(name = "image")
     private String image;

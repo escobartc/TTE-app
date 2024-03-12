@@ -72,6 +72,8 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
             return role.equals("ADMIN");
         } else if (endpoint.startsWith("/api/product")) {
             return role.equals("ADMIN") || role.equals("employee");
+        } else if (endpoint.startsWith("/api/category")) {
+            return role.equals("ADMIN") || role.equals("employee");
         } else {
             return false;
         }
