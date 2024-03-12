@@ -1,11 +1,13 @@
 package com.challenge.tteapp.service.impl;
 
+import com.challenge.tteapp.model.Category;
 import com.challenge.tteapp.model.Inventory;
 import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.Rating;
-import com.challenge.tteapp.processor.ValidationError;
-import com.challenge.tteapp.repository.ProductRepository;
+import com.challenge.tteapp.model.dto.CategoryDTO;
 import com.challenge.tteapp.model.dto.ProductDTO;
+import com.challenge.tteapp.repository.CategoryRepository;
+import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.service.ProductService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -21,7 +24,7 @@ import java.util.List;
 public class ProductServiceImp implements ProductService {
 
     private final ProductRepository productRepository;
-    private final ValidationError validationError;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public List<ProductDTO> getAllProducts() {
@@ -30,19 +33,35 @@ public class ProductServiceImp implements ProductService {
                 .toList();
     }
 
-
-    // Method to map Product entity to ProductDTO
     private ProductDTO mapToProductDTO(Product product) {
         ProductDTO productDTO = new ProductDTO();
         productDTO.setId(product.getId());
         productDTO.setTitle(product.getTitle());
         productDTO.setPrice(product.getPrice());
-        productDTO.setCategory(product.getCategory());
+        productDTO.setCategory(mapToCategoryDTO(product.getCategory())); // Map Category to CategoryDTO
         return productDTO;
+    }
+
+    private CategoryDTO mapToCategoryDTO(Category category) {
+        CategoryDTO categoryDTO = new CategoryDTO();
+        categoryDTO.setId(category.getId());
+        categoryDTO.setName(category.getName());
+        return categoryDTO;
     }
 
     public ResponseEntity<Object> saveProduct(ProductDTO productDTO, String requestId) {
         Product product = copyProductForDB(productDTO);
+
+        // Resolve category based on name and set it in the product
+        Category category = categoryRepository.findByName(productDTO.getCategory().getName());
+        if (category == null) {
+            // If category does not exist, create it
+            category = new Category();
+            category.setName(productDTO.getCategory().getName());
+            category.setState(productDTO.getState());
+            category = categoryRepository.save(category);
+        }
+        product.setCategory(category);
 
         // Save the Product entity
         Product savedProduct = productRepository.save(product);
@@ -59,7 +78,6 @@ public class ProductServiceImp implements ProductService {
         product.setTitle(productDTO.getTitle());
         product.setPrice(productDTO.getPrice());
         product.setDescription(productDTO.getDescription());
-        product.setCategory(productDTO.getCategory());
         product.setImage(productDTO.getImage());
         product.setState(productDTO.getState());
 
@@ -78,5 +96,4 @@ public class ProductServiceImp implements ProductService {
         product.setInventory(inventory);
         return product;
     }
-
 }

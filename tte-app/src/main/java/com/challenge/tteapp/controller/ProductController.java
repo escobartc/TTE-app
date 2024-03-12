@@ -1,8 +1,10 @@
 package com.challenge.tteapp.controller;
 
+import com.challenge.tteapp.model.Category;
 import com.challenge.tteapp.model.Inventory;
 import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.Rating;
+import com.challenge.tteapp.model.dto.CategoryDTO;
 import com.challenge.tteapp.model.dto.InventoryDTO;
 import com.challenge.tteapp.model.dto.ProductDTO;
 import com.challenge.tteapp.model.dto.RatingDTO;
@@ -123,7 +125,6 @@ public class ProductController {
     }
 
     private static Product setProductFieldsForUpdate(ProductDTO productDTO, Product existingProduct) {
-
         // Update the product fields with the new values if they are not null in the request body
         if (productDTO.getTitle() != null) {
             existingProduct.setTitle(productDTO.getTitle());
@@ -135,7 +136,11 @@ public class ProductController {
             existingProduct.setDescription(productDTO.getDescription());
         }
         if (productDTO.getCategory() != null) {
-            existingProduct.setCategory(productDTO.getCategory());
+            // Assuming productDTO.getCategory() returns a CategoryDTO object
+            CategoryDTO categoryDTO = productDTO.getCategory();
+            Category category = new Category();
+            category.setId(categoryDTO.getId()); // Set the ID of the category
+            existingProduct.setCategory(category);
         }
         if (productDTO.getImage() != null) {
             existingProduct.setImage(productDTO.getImage());
@@ -162,6 +167,7 @@ public class ProductController {
         }
         return existingProduct;
     }
+
 
     private static void verifyAuthorizationForCreation(ProductDTO product, Authentication authentication) {
         // Get the authenticated user's authorities (roles)
