@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          path: tte-app  # Specify the correct path to checkout
+          path: /home/runner/work/TTE-app/TTE-app  # Specify the correct path to checkout
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Echo
@@ -22,19 +22,10 @@ jobs:
         run: ls
 
       - name: List contents of the directory
-        run: ls -la tte-app
+        run: ls -la /home/runner/work/TTE-app/TTE-app/tte-app
 
       - name: List contents of the directory
-        run: cd tte-app
-
-      - name: List contents of the directory
-        run: ls
-
-      - name: Echo
-        run: pwd
-
-      - name: List contents of the directory
-        run: cd tte-app
+        run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
       - name: List contents of the directory
         run: ls
