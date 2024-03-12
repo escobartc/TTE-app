@@ -24,6 +24,15 @@ jobs:
       - name: List contents of the directory
         run: ls -la tte-app
 
+      - name: List contents of the directory
+        run: cd tte-app
+
+      - name: List contents of the directory
+        run: ls
+
+      - name: Echo
+        run: pwd
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
