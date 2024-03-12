@@ -33,22 +33,23 @@ public class UserServiceImpl implements UserService {
         public ResponseEntity<Object> loginUser(LogInOutUser logInOutUser, String requestId) {
             try {
                 log.info("Login user , requestId: [{}]", requestId);
+                User userAuth = userRepository.findElement(logInOutUser.getEmail());
+                String name = userAuth.getUsername();
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
-                User userAuth = userRepository.findByEmail(logInOutUser.getEmail())
-                        .orElseThrow();
-                TokenRequest token = new TokenRequest();
-                token.setToken(jwtService.getToken(userAuth));
-                User user = userRepository.findElement(logInOutUser.getEmail());
-                if (user.getState().equals(1)) {
+                if (userAuth.getState().equals(1)) {
                     log.warn("The user is already logged in, requestId: {}", requestId);
                     return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
                             "The user is already logged in"), HttpStatus.BAD_REQUEST);
                 } else {
-                    user.setState(1);
-                    userRepository.save(user);
+                    userAuth.setState(1);
+                    userAuth.setUsername(name);
+                    userRepository.save(userAuth);
                 }
-                return new ResponseEntity<>(token, HttpStatus.CREATED);
-
+                LoginResponse loginResponse = new LoginResponse();
+                loginResponse.setUsername(name);
+                loginResponse.setEmail(logInOutUser.getEmail());
+                loginResponse.setToken(jwtService.getToken(userAuth));
+                return new ResponseEntity<>(loginResponse, HttpStatus.CREATED);
             }catch (AuthenticationException e) {
                 return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
                         "Incorrect email or password"), HttpStatus.BAD_REQUEST);
@@ -76,17 +77,18 @@ public class UserServiceImpl implements UserService {
         userResponse.setUsername(shopper.getUsername());
         log.info("creation Shopper successful, with requestId: [{}]", requestId);
         return new ResponseEntity<>(userResponse,HttpStatus.CREATED);
-
     }
 
     @Override
     public ResponseEntity<Object> logoutUser(LogInOutUser logInOutUser, String requestId) {
         try {
             log.info("Logout user , requestId: [{}]", requestId);
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
             User user = userRepository.findElement(logInOutUser.getEmail());
+            String name = user.getUsername();
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
             if (user.getState().equals(1)) {
                 user.setState(0);
+                user.setUsername(name);
                 userRepository.save(user);
             } else {
                 log.warn("The user is already logout, requestId: {}", requestId);

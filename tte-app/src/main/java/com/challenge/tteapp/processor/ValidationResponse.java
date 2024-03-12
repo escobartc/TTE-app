@@ -20,6 +20,4 @@ public class ValidationResponse {
                 field + " exist in database"), HttpStatus.BAD_REQUEST);
     }
 
-
-
 }
