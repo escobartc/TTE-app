@@ -25,6 +25,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @Service
 @Slf4j
@@ -58,7 +60,8 @@ public class AdminServiceImpl implements AdminService {
         try {
         log.info("Login Admin , requestId: [{}]", requestId);
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getEmail(), admin.getPassword()));
-        User user = userRepository.findByEmail(admin.getEmail()).orElseThrow();
+            User user = userRepository.findByEmail(admin.getEmail())
+                    .orElseThrow(() -> new NoSuchElementException("User not found with email: " + admin.getEmail()));
         TokenRequest token = new TokenRequest();
         token.setToken(jwtService.getToken(user));
         return new ResponseEntity<>(token,HttpStatus.CREATED);
