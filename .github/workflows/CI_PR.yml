@@ -1,10 +1,8 @@
-name: CI
+name: CI_PR
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "*" ]
   pull_request:
     branches: [ "*" ]
   # Allows you to run this workflow manually from the Actions tab
@@ -43,37 +41,33 @@ jobs:
           export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
           export DB_USERNAME="${{ secrets.DB_USERNAME }}"
           export DB_PORT="${{ secrets.DB_PORT }}"
-          export SECRET_KEY="${{ secrets.SECRET_KEY }}"     
-
+          export SECRET_KEY="${{ secrets.SECRET_KEY }}"
       - name: Change to project directory
         run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
       # Use the appropriate commit SHA based on the event type
       - name: Build with Maven
         run: |
-          if [[ ${{ github.event_name }} == 'push' ]]; then
+          if [[ github.event.name == 'push' ]]; then
             COMMIT_SHA=${{ github.sha }}
           else
             COMMIT_SHA=${{ github.event.pull_request.head.sha }}
           fi
-          mvn -Dcommit_sha=$COMMIT_SHA -f /home/runner/work/TTE-app/TTE-app/tte-app/pom.xml clean package
-
+          mvn -f /home/runner/work/TTE-app/TTE-app/tte-app/pom.xml clean package
       - name: Copy JAR file to Docker directory
         run: cp /home/runner/work/TTE-app/TTE-app/tte-app/target/tte-app-0.0.1-SNAPSHOT.jar /home/runner/work/TTE-app/TTE-app/tte-app/
 
       - name: Build Docker image
         run: |
-          docker build -t tech-trend-emporium-app:${COMMIT_SHA} -f /home/runner/work/TTE-app/TTE-app/tte-app/Dockerfile .
-
+          docker build -t tech-trend-emporium-app:${{ github.event.pull_request.head.sha }} -f /home/runner/work/TTE-app/TTE-app/tte-app/Dockerfile .
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Tag Docker image
         run: |
-          docker tag tech-trend-emporium-app:${COMMIT_SHA} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${COMMIT_SHA}
-
+          docker tag tech-trend-emporium-app:${{ github.event.pull_request.head.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.event.pull_request.head.sha }}
       - name: Push Docker image to Amazon ECR
         run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${COMMIT_SHA}
-    
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.event.pull_request.head.sha }}
+      # ...
