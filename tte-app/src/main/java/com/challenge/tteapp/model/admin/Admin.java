@@ -9,7 +9,6 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Admin {
 

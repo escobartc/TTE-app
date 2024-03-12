@@ -55,7 +55,6 @@ public class UserServiceImpl implements UserService {
                         "Incorrect email or password"), HttpStatus.BAD_REQUEST);
             }
         }
-    @Override
     public ResponseEntity<Object> registerShopper(ShopperDTO shopperDTO, String requestId) {
         log.info("Save Shopper information in database, requestId: {}", requestId);
         if (userRepository.findElement(shopperDTO.getEmail()) != null) {

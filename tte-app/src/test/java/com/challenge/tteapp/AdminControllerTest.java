@@ -1,8 +1,6 @@
 package com.challenge.tteapp;
 
 import com.challenge.tteapp.controller.AdminController;
-import com.challenge.tteapp.controller.ProductController;
-import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.User;
 import com.challenge.tteapp.model.UserResponse;
 import com.challenge.tteapp.model.admin.Admin;
@@ -23,11 +21,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +30,7 @@ import static org.mockito.Mockito.*;
 
 
 @RunWith(MockitoJUnitRunner.class)
-public class AdminTest {
+public class AdminControllerTest {
 
     @Mock
     private ProductService productService;
