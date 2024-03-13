@@ -60,6 +60,7 @@ public class UserServiceImpl implements UserService {
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Incorrect email or password");
         }
     }
+    @Override
     public ResponseEntity<Object> registerShopper(ShopperDTO shopperDTO, String requestId) {
         log.info("Save Shopper information in database, requestId: {}", requestId);
         if (userRepository.findElement(shopperDTO.getEmail()) != null) {
