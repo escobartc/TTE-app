@@ -35,10 +35,8 @@ public class UserControllerTest {
     private UserService userService;
     @InjectMocks
     private UserController userController;
-
     @InjectMocks
     private UserServiceImpl userServiceimpl;
-
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -49,7 +47,6 @@ public class UserControllerTest {
     private AuthenticationManager authenticationManager;
     @Mock
     private ValidationResponse validationResponse;
-
     @Mock
     private ValidationError validationError;
     @Test

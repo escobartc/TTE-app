@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("${service.controller.path}")
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor
 @Slf4j
 public class UserController {
 

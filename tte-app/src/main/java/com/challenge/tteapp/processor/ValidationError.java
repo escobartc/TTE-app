@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ValidationError {
 
-    public StructureError getStructureError(int code, String message){
+    public StructureError getStructureError(String message, String code){
         StructureError structureError = new StructureError();
         structureError.setError(new ErrorModel(code,message));
         return structureError;

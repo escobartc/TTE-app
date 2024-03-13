@@ -27,6 +27,11 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final ValidationError validationError;
+    private final static String ADMIN = "ADMIN";
+    private final static String EMPLOYEE = "EMPLOYEE";
+    private final static String CUSTOMER = "CUSTOMER";
+
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

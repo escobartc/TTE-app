@@ -24,10 +24,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.NoSuchElementException;
 
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@AllArgsConstructor
 @Service
 @Slf4j
 public class AdminServiceImpl implements AdminService {
@@ -42,8 +43,13 @@ public class AdminServiceImpl implements AdminService {
 
 
     public ResponseEntity<Object> register(UserDTO userDTO, String requestId) {
+        if (!userDTO.getRole().equalsIgnoreCase("employee")) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Role must be 'employee' for user registration");
+        }
         User user = new User();
-        BeanUtils.copyProperties(userDTO, user);
+        user.setRole("EMPLOYEE");
+        user.setUsername(userDTO.getUsername());
+        user.setEmail(userDTO.getEmail());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setState(0);
         return validationInfo(user, requestId);
@@ -66,13 +72,12 @@ public class AdminServiceImpl implements AdminService {
         token.setToken(jwtService.getToken(user));
         return new ResponseEntity<>(token,HttpStatus.CREATED);
         }catch (AuthenticationException e) {
-            return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
-                    "Incorrect email or password"), HttpStatus.BAD_REQUEST);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Incorrect email or password");
         }
     }
 
     private ResponseEntity<Object> validationInfo(User user, String requestId){
-        log.info("Save information in database, requestId: {}", requestId);
+        log.info("Save information in database, requestId: [{}]", requestId);
         if (userRepository.findElement(user.getEmail()) != null) {
             return validationResponse.createDuplicateResponse("Email", requestId);
         }
@@ -85,14 +90,12 @@ public class AdminServiceImpl implements AdminService {
     private UserResponse createUserResponse(User user) {
         UserResponse userResponse = new UserResponse();
         userResponse.setId(jwtService.getToken(user));
-        if (user.getRole().equals("ADMIN")) {
-            return userResponse;
-        } else {
+        if (!user.getRole().equals("ADMIN")) {
             userResponse.setEmail(user.getEmail());
             userResponse.setUsername(user.getUsername());
             userResponse.setRole(user.getRole());
-            return userResponse;
         }
+        return userResponse;
     }
 
 

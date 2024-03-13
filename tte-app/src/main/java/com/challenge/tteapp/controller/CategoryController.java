@@ -16,7 +16,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api")
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor
 @Slf4j
 public class CategoryController {
 
