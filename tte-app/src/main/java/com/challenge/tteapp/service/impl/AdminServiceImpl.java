@@ -72,7 +72,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private ResponseEntity<Object> validationInfo(User user, String requestId){
-        log.info("Save information in database, requestId: {}", requestId);
+        log.info("Save information in database, requestId: [{}]", requestId);
         if (userRepository.findElement(user.getEmail()) != null) {
             return validationResponse.createDuplicateResponse("Email", requestId);
         }

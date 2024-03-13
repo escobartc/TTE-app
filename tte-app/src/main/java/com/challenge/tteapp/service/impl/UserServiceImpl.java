@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
             }
         }
     public ResponseEntity<Object> registerShopper(ShopperDTO shopperDTO, String requestId) {
-        log.info("Save Shopper information in database, requestId: {}", requestId);
+        log.info("Save Shopper information in database, requestId: [{}]", requestId);
         if (userRepository.findElement(shopperDTO.getEmail()) != null) {
             return validationResponse.createDuplicateResponse("Email", requestId);
         }
@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
                 user.setUsername(name);
                 userRepository.save(user);
             } else {
-                log.warn("The user is already logout, requestId: {}", requestId);
+                log.warn("The user is already logout, requestId: [{}]", requestId);
                 return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
                         "The user is already logout"), HttpStatus.BAD_REQUEST);
             }
