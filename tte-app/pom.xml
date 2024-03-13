@@ -18,12 +18,12 @@
 		<sonar.organization>escobartc</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<sonar.coverage.exclusions>
-			src/main/java/com/challenge/tteapp/configuration
-			src/main/java/com/challenge/tteapp/controller
-			src/main/java/com/challenge/tteapp/model
-			src/main/java/com/challenge/tteapp/processor
-			src/main/java/com/challenge/tteapp/repository
-			src/main/java/com/challenge/tteapp/service
+			src/main/java/com/challenge/tteapp/configuration/**
+			src/main/java/com/challenge/tteapp/controller/**
+			src/main/java/com/challenge/tteapp/model/**
+			src/main/java/com/challenge/tteapp/processor/**
+			src/main/java/com/challenge/tteapp/repository/**
+			src/main/java/com/challenge/tteapp/service/**
 		</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
