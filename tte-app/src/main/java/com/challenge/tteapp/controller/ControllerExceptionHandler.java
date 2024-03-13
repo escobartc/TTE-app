@@ -26,21 +26,20 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(validationError.getStructureError(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR),
                 e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
     @ExceptionHandler(HttpServerErrorException.class)
     public final ResponseEntity<Object> httpServerExcepcion(HttpServerErrorException e) {
         log.error(e.getMessage(),e.getStatusCode().value());
         return new ResponseEntity<>(validationError.getStructureError(String.valueOf(e.getStatusCode().value()),
                 e.getMessage()), HttpStatus.OK);
     }
-
     @ExceptionHandler(HttpClientErrorException.class)
     public final ResponseEntity<Object> httpClientExcepcion(HttpClientErrorException e) {
         String errorMessage = e.getStatusText();
         int statusCode = e.getStatusCode().value();
         log.error(e.getMessage());
         return new ResponseEntity<>(validationError.getStructureError(errorMessage, String.valueOf(statusCode)),
-                e.getStatusCode());    }
+                e.getStatusCode());
+    }
     @ExceptionHandler(ParseException.class)
     public final ResponseEntity<Object> parseExcepcion(ParseException e) {
         log.error(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR.value());

@@ -73,12 +73,12 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     }
 
     private boolean isAuthorized(String role,String endpoint) {
-        if (endpoint.equals("/api/admin/auth")) {
-            return role.equals("ADMIN");
+        if (endpoint.equals("/api/admin/auth") || endpoint.equals("/api/user")) {
+            return role.equals(ADMIN);
         } else if (endpoint.startsWith("/api/product")) {
-            return role.equals("ADMIN") || role.equals("employee");
+            return role.equals(ADMIN) || role.equals(EMPLOYEE);
         } else if (endpoint.startsWith("/api/category")) {
-            return role.equals("ADMIN") || role.equals("employee");
+            return role.equals(ADMIN) || role.equals(EMPLOYEE);
         } else {
             return false;
         }

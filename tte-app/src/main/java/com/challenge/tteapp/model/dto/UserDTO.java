@@ -1,10 +1,7 @@
 package com.challenge.tteapp.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Getter
@@ -13,6 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UserDTO {
     private String email;
+    @NonNull
     private String username;
     private String password;
     private String role;

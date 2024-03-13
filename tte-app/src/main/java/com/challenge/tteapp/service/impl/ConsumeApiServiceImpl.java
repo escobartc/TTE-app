@@ -27,7 +27,6 @@ public class ConsumeApiServiceImpl {
         ResponseEntity<Object[]> responseEntity = restTemplate.getForEntity(dataConfig.getPathStore(), Object[].class);
         Object[] objects = responseEntity.getBody();
         for (Object obj : objects) {
-
             ProductDTOS productDTO = objectMapper.convertValue(obj, ProductDTOS.class);
             Product product = new Product();
             BeanUtils.copyProperties(productDTO, product);
