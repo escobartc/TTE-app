@@ -7,6 +7,6 @@ import lombok.Setter;
 import java.util.List;
 @Getter
 @Setter
-public class ViewUsers {
+public class UsersList {
     private List<UserDTO> users;
 }

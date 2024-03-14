@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
             loginResponse.setToken(jwtService.getToken(userAuth));
             return new ResponseEntity<>(loginResponse, HttpStatus.CREATED);
         } catch (AuthenticationException e) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Incorrect email or password");
+            throw new AuthenticationException("Incorrect email or password") {};
         }
     }
     @Override
@@ -102,8 +102,7 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(new Status("ok"), HttpStatus.CREATED);
 
         }catch (AuthenticationException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect email or password", e);
-
+            throw new AuthenticationException("Incorrect email or password") {};
         }
     }
 }

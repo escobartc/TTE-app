@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
@@ -32,6 +33,15 @@ class ControllerExceptionHandlerTest {
         ResponseEntity<Object> responseEntity = controllerExceptionHandler.exceptionClass(exception);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         verify(validationError).getStructureError(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR), exception.getMessage());
+    }
+
+    @Test
+    void testAuthenticationException() {
+        AuthenticationException exception = new AuthenticationException("Test exception message") {
+        };
+        ResponseEntity<Object> responseEntity = controllerExceptionHandler.AuthenticationException(exception);
+        assertEquals(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
+        verify(validationError).getStructureError(String.valueOf(HttpStatus.UNAUTHORIZED), exception.getMessage());
     }
 
     @Test

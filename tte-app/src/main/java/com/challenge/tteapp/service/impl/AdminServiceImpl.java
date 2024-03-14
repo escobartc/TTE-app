@@ -1,9 +1,6 @@
 package com.challenge.tteapp.service.impl;
 
-import com.challenge.tteapp.model.TokenRequest;
-import com.challenge.tteapp.model.User;
-import com.challenge.tteapp.model.UserResponse;
-import com.challenge.tteapp.model.ViewUsers;
+import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
 import com.challenge.tteapp.model.dto.UserDTO;
@@ -16,21 +13,22 @@ import com.challenge.tteapp.service.AdminService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
-import javax.swing.text.View;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
+
+import static com.challenge.tteapp.model.Constants.MESSAGE;
 
 @AllArgsConstructor
 @Service
@@ -78,17 +76,17 @@ public class AdminServiceImpl implements AdminService {
             token.setToken(jwtService.getToken(user));
             return new ResponseEntity<>(token, HttpStatus.CREATED);
         } catch (AuthenticationException e) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Incorrect email or password");
+            throw new AuthenticationException("Incorrect email or password") {};
         }
     }
 
     @Override
-    public ResponseEntity<ViewUsers> viewUsers(String requestId) {
+    public ResponseEntity<UsersList> viewUsers(String requestId) {
         List<User> users = userRepository.findAll();
-        List<UserDTO> userDTOs = users.stream().map(this::mapToUserDTO).collect(Collectors.toList());
-        ViewUsers viewUsers = new ViewUsers();
-        viewUsers.setUsers(userDTOs);
-        return ResponseEntity.ok(viewUsers);
+        List<UserDTO> userDTOs = users.stream().map(this::mapToUserDTO).toList();
+        UsersList usersList = new UsersList();
+        usersList.setUsers(userDTOs);
+        return ResponseEntity.ok(usersList);
     }
 
     @Override
@@ -104,7 +102,24 @@ public class AdminServiceImpl implements AdminService {
             user.setPassword(passwordEncoder.encode(userDTOUpdate.getPassword()));
         }
         userRepository.save(user);
-        return ResponseEntity.ok("User updated successfully");
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of(MESSAGE, "User " + userDTOUpdate.getUsername() + " has been updated successfully"));
+    }
+
+    @Override
+    public ResponseEntity<Object> deleteUser(usersDTO users, String requestId) {
+        List<String> deletedUsernames = new ArrayList<>();
+        for (String username : users.getUsers()) {
+            User user = userRepository.findElement(username);
+            if (user != null) {
+                userRepository.delete(user);
+                deletedUsernames.add(username);
+            }
+        }
+        if (!deletedUsernames.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of(MESSAGE, "Users deleted successfully " + deletedUsernames));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("Message", "No users found for deletion."));
+        }
     }
 
     private ResponseEntity<Object> validationInfo(User user, String requestId) {
@@ -130,7 +145,7 @@ public class AdminServiceImpl implements AdminService {
         return userResponse;
     }
 
-    private UserDTO mapToUserDTO(User user) {
+    public UserDTO mapToUserDTO(User user) {
         UserDTO userDTO = new UserDTO();
         userDTO.setUsername(user.getUsername());
         userDTO.setEmail(user.getEmail());

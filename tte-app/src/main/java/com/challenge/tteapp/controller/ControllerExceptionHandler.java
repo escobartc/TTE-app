@@ -1,13 +1,13 @@
 package com.challenge.tteapp.controller;
 
 import com.challenge.tteapp.processor.ValidationError;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.logging.LogLevel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -25,6 +25,12 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         log.error(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR.value());
         return new ResponseEntity<>(validationError.getStructureError(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR),
                 e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Object> AuthenticationException(AuthenticationException e) {
+        log.error(e.getMessage(),HttpStatus.UNAUTHORIZED.value());
+        return new ResponseEntity<>(validationError.getStructureError(String.valueOf(HttpStatus.UNAUTHORIZED),
+                e.getMessage()), HttpStatus.UNAUTHORIZED);
     }
     @ExceptionHandler(HttpServerErrorException.class)
     public final ResponseEntity<Object> httpServerExcepcion(HttpServerErrorException e) {

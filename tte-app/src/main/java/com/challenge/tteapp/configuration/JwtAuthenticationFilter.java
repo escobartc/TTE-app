@@ -2,12 +2,15 @@ package com.challenge.tteapp.configuration;
 
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,6 +44,7 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
             final String role;
             final String endpoint;
 
+        try {
         if (token == null) {
             filterChain.doFilter(request, response);
             return;
@@ -70,6 +74,11 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
         UserRoleContext.clear();
+    }catch (ExpiredJwtException e){
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter().write("{\"error\": \"Token expired\"}");
+        }
     }
 
     private boolean isAuthorized(String role,String endpoint) {
