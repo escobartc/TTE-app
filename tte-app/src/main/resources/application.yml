@@ -15,5 +15,6 @@ server:
   port: ${PORT}
 data:
   secretKey: ${SECRET_KEY}
+  pathStore: ${PATH_STORE}
 
 
