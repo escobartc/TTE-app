@@ -1,30 +1,22 @@
 package com.challenge.tteapp.controller;
 
-import com.challenge.tteapp.model.Product;
+import com.challenge.tteapp.model.UsersList;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
-import com.challenge.tteapp.model.dto.ProductDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
+import com.challenge.tteapp.model.usersDTO;
 import com.challenge.tteapp.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("${service.controller.path}")
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor
 @Slf4j
 public class AdminController {
 
@@ -49,5 +41,25 @@ public class AdminController {
         log.info("JOIN TO TTE-APP, creation user by admin, with requestId: {}", requestId);
         return adminService.register(userDTO, requestId);
     }
+
+    @GetMapping(path= "/user")
+    public ResponseEntity<UsersList> viewUser() {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, view all user by admin, with requestId: {}", requestId);
+        return adminService.viewUsers(requestId);
+    }
+    @PutMapping(path= "/user")
+    public ResponseEntity<Object> updatingUser(@RequestBody UserDTO userDTOUpdate) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, Update user by admin, with requestId: {}", requestId);
+        return adminService.userUpdate(userDTOUpdate, requestId);
+    }
+    @DeleteMapping(path= "/user")
+    public ResponseEntity<Object> deleteUser(@RequestBody usersDTO users) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, delete user by admin, with requestId: {}", requestId);
+        return adminService.deleteUser(users, requestId);
+    }
+
 
 }

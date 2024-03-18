@@ -21,8 +21,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.client.HttpClientErrorException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -35,10 +37,8 @@ public class UserControllerTest {
     private UserService userService;
     @InjectMocks
     private UserController userController;
-
     @InjectMocks
     private UserServiceImpl userServiceimpl;
-
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -49,7 +49,6 @@ public class UserControllerTest {
     private AuthenticationManager authenticationManager;
     @Mock
     private ValidationResponse validationResponse;
-
     @Mock
     private ValidationError validationError;
     @Test
@@ -68,17 +67,15 @@ public class UserControllerTest {
     @Test
     public void LoginUserTest() {
         LogInOutUser logInOutUser = LoginOutUser();
-        UserResponse userResponse = new UserResponse();
-        ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
-        when(userService.loginUser(eq(logInOutUser), anyString())).thenReturn(successResponse);
+        ResponseEntity<Object> errorResponse = new ResponseEntity<>("The user is already logged in", HttpStatus.BAD_REQUEST);
+        when(userService.loginUser(eq(logInOutUser), anyString())).thenReturn(errorResponse);
         ResponseEntity<Object> response = userController.loginUser(logInOutUser);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         User existingUser = userInfo();
         existingUser.setState(1);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
-        ResponseEntity<Object> response2 = userServiceimpl.loginUser(logInOutUser, "requestId");
-        assertEquals(HttpStatus.BAD_REQUEST, response2.getStatusCode());
-
+        assertThrows(HttpClientErrorException.class, () -> {
+            userServiceimpl.loginUser(logInOutUser, "requestId");});
     }
 
     @Test
@@ -108,9 +105,8 @@ public class UserControllerTest {
         User existingUser = userInfo();
         existingUser.setState(0);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
-        ResponseEntity<Object> response2 = userServiceimpl.logoutUser(logInOutUser, "requestId");
-        assertEquals(HttpStatus.BAD_REQUEST, response2.getStatusCode());
-
+        assertThrows(HttpClientErrorException.class, () -> {
+            userServiceimpl.logoutUser(logInOutUser, "requestId");});
     }
     @Test
     public void LoginUserTest2() {

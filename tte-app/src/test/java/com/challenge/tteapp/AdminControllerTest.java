@@ -3,9 +3,11 @@ package com.challenge.tteapp;
 import com.challenge.tteapp.controller.AdminController;
 import com.challenge.tteapp.model.User;
 import com.challenge.tteapp.model.UserResponse;
+import com.challenge.tteapp.model.UsersList;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
 import com.challenge.tteapp.model.dto.UserDTO;
+import com.challenge.tteapp.model.usersDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
@@ -21,7 +23,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 
@@ -87,8 +92,10 @@ public class AdminControllerTest {
         when(passwordEncoder.encode(userDTO.getPassword())).thenReturn("encodedPassword");
 
         ResponseEntity<Object> response2 = adminServiceImpl.register(userDTO, "requestId");
-
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+        userDTO.setRole("other");
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.register(userDTO, "requestId");});
     }
 
     @Test
@@ -107,6 +114,62 @@ public class AdminControllerTest {
         ResponseEntity<Object> response2 = adminServiceImpl.loginAdmin(loginAdmin, "requestId");
 
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+
+    }
+
+    @Test
+    public void viewUserTest() {
+        UsersList userResponse = new UsersList();
+        ResponseEntity<UsersList> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        when(adminService.viewUsers(anyString())).thenReturn(successResponse);
+        ResponseEntity<UsersList> response = adminController.viewUser();
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        UserRepository userRepositoryMock = mock(UserRepository.class);
+        List<User> users = new ArrayList<>();
+        users.add(new User());
+        users.add(new User());
+        ResponseEntity<UsersList> response2 = adminServiceImpl.viewUsers("requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+    @Test
+    public void UserUpdate() {
+        UserDTO userResponse = userInfo();
+        ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        when(adminService.userUpdate(eq(userResponse) ,anyString())).thenReturn(successResponse);
+        ResponseEntity<Object> response = adminController.updatingUser(userResponse);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        when(userRepository.findElement(userResponse.getUsername())).thenReturn(new User());
+        ResponseEntity<Object> response2 = adminServiceImpl.userUpdate(userResponse,"requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+
+        when(userRepository.findElement(userResponse.getUsername())).thenReturn(null);
+        assertThrows(HttpClientErrorException.class, () -> {
+                    adminServiceImpl.userUpdate(userResponse, "requestId");});
+
+    }
+
+    @Test
+    public void deleteUser() {
+        usersDTO userResponse = new usersDTO();
+        List<String> users = new ArrayList<>();
+        users.add("employee");
+        users.add("other");
+        userResponse.setUsers(users);
+
+        ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        when(adminService.deleteUser(eq(userResponse) ,anyString())).thenReturn(successResponse);
+        ResponseEntity<Object> response = adminController.deleteUser(userResponse);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+
+
+        when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(new User());
+        ResponseEntity<Object> response2 = adminServiceImpl.deleteUser(userResponse,"requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+
+        when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(null);
+        ResponseEntity<Object> response3 = adminServiceImpl.deleteUser(userResponse,"requestId");
+        assertEquals(HttpStatus.NOT_FOUND, response3.getStatusCode());
+
     }
 
     @Test
