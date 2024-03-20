@@ -39,7 +39,7 @@ class ControllerExceptionHandlerTest {
     void testAuthenticationException() {
         AuthenticationException exception = new AuthenticationException("Test exception message") {
         };
-        ResponseEntity<Object> responseEntity = controllerExceptionHandler.AuthenticationException(exception);
+        ResponseEntity<Object> responseEntity = controllerExceptionHandler.authenticationException(exception);
         assertEquals(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
         verify(validationError).getStructureError(String.valueOf(HttpStatus.UNAUTHORIZED), exception.getMessage());
     }

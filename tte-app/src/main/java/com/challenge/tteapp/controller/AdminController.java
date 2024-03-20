@@ -4,7 +4,7 @@ import com.challenge.tteapp.model.UsersList;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
 import com.challenge.tteapp.model.dto.UserDTO;
-import com.challenge.tteapp.model.usersDTO;
+import com.challenge.tteapp.model.UsersDTO;
 import com.challenge.tteapp.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ public class AdminController {
     @PostMapping(path= "/admin/auth", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> createUser(@RequestBody UserDTO userDTO) {
         String requestId = UUID.randomUUID().toString();
-        log.info("JOIN TO TTE-APP, creation user by admin, with requestId: {}", requestId);
+        log.info("JOIN TO TTE-APP, creation user by admin, with requestId: [{}]", requestId);
         return adminService.register(userDTO, requestId);
     }
 
@@ -55,7 +55,7 @@ public class AdminController {
         return adminService.userUpdate(userDTOUpdate, requestId);
     }
     @DeleteMapping(path= "/user")
-    public ResponseEntity<Object> deleteUser(@RequestBody usersDTO users) {
+    public ResponseEntity<Object> deleteUser(@RequestBody UsersDTO users) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, delete user by admin, with requestId: {}", requestId);
         return adminService.deleteUser(users, requestId);

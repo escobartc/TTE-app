@@ -17,14 +17,6 @@
 		<java.version>17</java.version>
 		<sonar.organization>escobartc</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-		<sonar.coverage.exclusions>
-			src/main/java/com/challenge/tteapp/configuration/**
-			src/main/java/com/challenge/tteapp/controller/**
-			src/main/java/com/challenge/tteapp/model/**
-			src/main/java/com/challenge/tteapp/processor/**
-			src/main/java/com/challenge/tteapp/repository/**
-			src/main/java/com/challenge/tteapp/service/**
-		</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -88,6 +80,26 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-boot-starter</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.2.0</version>
+		</dependency>
     </dependencies>
 
 	<build>
@@ -125,5 +137,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

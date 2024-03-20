@@ -23,4 +23,18 @@ public class ProductDTO {
     private String state;
     private RatingDTO rating;
     private InventoryDTO inventory;
+    @Override
+    public String toString() {
+        return "ProductDTO{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", price=" + price +
+                ", description='" + description + '\'' +
+                ", category=" + category +
+                ", image='" + image + '\'' +
+                ", state='" + state + '\'' +
+                ", rating=" + rating +
+                ", inventory=" + inventory +
+                '}';
+    }
 }

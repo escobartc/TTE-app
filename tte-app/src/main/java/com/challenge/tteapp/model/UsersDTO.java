@@ -6,6 +6,6 @@ import lombok.Setter;
 import java.util.List;
 @Getter
 @Setter
-public class usersDTO {
+public class UsersDTO {
     List<String> users;
 }

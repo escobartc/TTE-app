@@ -1,7 +1,9 @@
 package com.challenge.tteapp.configuration;
 
+import com.challenge.tteapp.model.User;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
+import com.challenge.tteapp.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,18 +24,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static com.challenge.tteapp.model.Constants.ADMIN;
+import static com.challenge.tteapp.model.Constants.EMPLOYEE;
+
 @Component
 @RequiredArgsConstructor
-
 public class JwtAuthenticationFilter  extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final ValidationError validationError;
-    private final static String ADMIN = "ADMIN";
-    private final static String EMPLOYEE = "EMPLOYEE";
-    private final static String CUSTOMER = "CUSTOMER";
-
+    private final UserRepository userRepository;
 
 
     @Override
@@ -75,9 +76,15 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
         UserRoleContext.clear();
     }catch (ExpiredJwtException e){
+            String consult = jwtService.getUsernameFromToken(token);
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write("{\"error\": \"Token expired\"}");
+            User user = userRepository.findElement(consult);
+            if(user!=null){
+                user.setState(0);
+                userRepository.save(user);
+            }
         }
     }
 

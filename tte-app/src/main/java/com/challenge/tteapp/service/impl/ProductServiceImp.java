@@ -59,6 +59,7 @@ public class ProductServiceImp implements ProductService {
             category = new Category();
             category.setName(productDTO.getCategory().getName());
             category.setState(productDTO.getState());
+            System.out.println(productDTO.getState());
             category = categoryRepository.save(category);
         }
         product.setCategory(category);
@@ -70,7 +71,7 @@ public class ProductServiceImp implements ProductService {
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
 
-    private static Product copyProductForDB(ProductDTO productDTO) {
+    public static Product copyProductForDB(ProductDTO productDTO) {
         // Create a new Product entity
         Product product = new Product();
 

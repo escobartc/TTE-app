@@ -3,7 +3,8 @@ package com.challenge.tteapp.configuration;
 
 
 public class UserRoleContext {
-
+    private UserRoleContext(){
+    }
     private static final ThreadLocal<String> userRole = new ThreadLocal<>();
 
     public static String getRole() {

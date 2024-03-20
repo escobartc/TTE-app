@@ -10,6 +10,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class Status {
+public class StatusResponse {
     private String status;
 }

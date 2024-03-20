@@ -4,7 +4,7 @@ import com.challenge.tteapp.model.UsersList;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
 import com.challenge.tteapp.model.dto.UserDTO;
-import com.challenge.tteapp.model.usersDTO;
+import com.challenge.tteapp.model.UsersDTO;
 import org.springframework.http.ResponseEntity;
 
 public interface AdminService {
@@ -13,5 +13,5 @@ public interface AdminService {
     ResponseEntity<Object> loginAdmin(LoginAdmin admin, String requestId);
     ResponseEntity<UsersList> viewUsers(String requestId);
     ResponseEntity<Object> userUpdate(UserDTO userDTOUpdate, String requestId);
-    ResponseEntity<Object> deleteUser(usersDTO users, String requestId);
+    ResponseEntity<Object> deleteUser(UsersDTO users, String requestId);
 }

@@ -1,10 +1,7 @@
 package com.challenge.tteapp;
 
-import com.challenge.tteapp.controller.AdminController;
 import com.challenge.tteapp.controller.UserController;
-import com.challenge.tteapp.model.LogInOutUser;
-import com.challenge.tteapp.model.User;
-import com.challenge.tteapp.model.UserResponse;
+import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.dto.ShopperDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
@@ -12,26 +9,24 @@ import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.repository.UserRepository;
 import com.challenge.tteapp.service.UserService;
 import com.challenge.tteapp.service.impl.UserServiceImpl;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.HttpClientErrorException;
 
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class UserControllerTest {
+@ExtendWith(MockitoExtension.class)
+class UserControllerTest {
 
     @Mock
     private UserService userService;
@@ -51,8 +46,9 @@ public class UserControllerTest {
     private ValidationResponse validationResponse;
     @Mock
     private ValidationError validationError;
+
     @Test
-    public void CreateShopperTest() {
+    void CreateShopperTest() {
         ShopperDTO shopperDTO = ShopperInfo();
         UserResponse userResponse = new UserResponse();
         ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
@@ -64,8 +60,9 @@ public class UserControllerTest {
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
 
     }
+
     @Test
-    public void LoginUserTest() {
+    void LoginUserTest() {
         LogInOutUser logInOutUser = LoginOutUser();
         ResponseEntity<Object> errorResponse = new ResponseEntity<>("The user is already logged in", HttpStatus.BAD_REQUEST);
         when(userService.loginUser(eq(logInOutUser), anyString())).thenReturn(errorResponse);
@@ -75,11 +72,12 @@ public class UserControllerTest {
         existingUser.setState(1);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
         assertThrows(HttpClientErrorException.class, () -> {
-            userServiceimpl.loginUser(logInOutUser, "requestId");});
+            userServiceimpl.loginUser(logInOutUser, "requestId");
+        });
     }
 
     @Test
-    public void LogOut() {
+    void LogOut() {
         LogInOutUser logInOutUser = LoginOutUser();
         UserResponse userResponse = new UserResponse();
         ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
@@ -95,7 +93,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void LogOut2() {
+    void LogOut2() {
         LogInOutUser logInOutUser = LoginOutUser();
         UserResponse userResponse = new UserResponse();
         ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
@@ -106,10 +104,12 @@ public class UserControllerTest {
         existingUser.setState(0);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
         assertThrows(HttpClientErrorException.class, () -> {
-            userServiceimpl.logoutUser(logInOutUser, "requestId");});
+            userServiceimpl.logoutUser(logInOutUser, "requestId");
+        });
     }
+
     @Test
-    public void LoginUserTest2() {
+    void LoginUserTest2() {
         LogInOutUser logInOutUser = LoginOutUser();
         UserResponse userResponse = new UserResponse();
         ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
@@ -133,31 +133,32 @@ public class UserControllerTest {
     }
 
     @Test
-    public void UserValidationEmail() {
+    void UserValidationEmail() {
         ShopperDTO shopperDTO = ShopperInfo();
         when(userRepository.findElement(eq(shopperDTO.getEmail()))).thenReturn(new User());
         ResponseEntity<Object> response2 = userServiceimpl.registerShopper(shopperDTO, "requestId");
 
         verify(validationResponse).createDuplicateResponse(eq("Email"), eq("requestId"));
     }
+
     @Test
-    public void UserValidationUsername() {
+    void UserValidationUsername() {
         ShopperDTO shopperDTO = ShopperInfo();
-        when(userRepository.findElement(eq(shopperDTO.getUsername()))).thenReturn(new User());
+        lenient().when(userRepository.findElement(eq(shopperDTO.getUsername()))).thenReturn(new User());
         ResponseEntity<Object> response2 = userServiceimpl.registerShopper(shopperDTO, "requestId");
         verify(validationResponse).createDuplicateResponse(eq("Username"), eq("requestId"));
     }
 
-    private static ShopperDTO ShopperInfo(){
-        ShopperDTO shopperDTO = new  ShopperDTO();
+    private static ShopperDTO ShopperInfo() {
+        ShopperDTO shopperDTO = new ShopperDTO();
         shopperDTO.setEmail("email");
         shopperDTO.setUsername("username");
         shopperDTO.setPassword("password");
         return shopperDTO;
     }
 
-    private static LogInOutUser LoginOutUser(){
-        LogInOutUser LoginOutUser = new  LogInOutUser();
+    private static LogInOutUser LoginOutUser() {
+        LogInOutUser LoginOutUser = new LogInOutUser();
         LoginOutUser.setEmail("email");
         LoginOutUser.setPassword("password");
         return LoginOutUser;

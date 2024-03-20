@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import static com.challenge.tteapp.model.Constants.MESSAGE;
 
@@ -106,7 +105,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<Object> deleteUser(usersDTO users, String requestId) {
+    public ResponseEntity<Object> deleteUser(UsersDTO users, String requestId) {
         List<String> deletedUsernames = new ArrayList<>();
         for (String username : users.getUsers()) {
             User user = userRepository.findElement(username);
@@ -152,6 +151,4 @@ public class AdminServiceImpl implements AdminService {
         userDTO.setRole(user.getRole());
         return userDTO;
     }
-
 }
-
