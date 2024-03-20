@@ -1,12 +1,15 @@
 package com.challenge.tteapp.controller;
 
 import com.challenge.tteapp.model.Category;
+import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.dto.CategoryDTO;
+import com.challenge.tteapp.model.dto.ProductDTO;
 import com.challenge.tteapp.service.impl.CategoryServiceImp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -43,6 +46,20 @@ public class CategoryController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(MESSAGE, "Failed to create category"));
         }
     }
+
+    @GetMapping("/category")
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        List<CategoryDTO> categories = categoryService.getAllCategories();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
+    }
+
+    @DeleteMapping(path = "/category", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> deleteCategory(@RequestBody Map<String, Long> requestBody, Authentication authentication) {
+        return categoryService.deleteCategory(requestBody, authentication);
+    }
+
+//    @PutMapping(path = "/category", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+
 
     private static boolean checkAuthorization(Authentication authentication) {
         // Get the authenticated user's authorities (roles)
