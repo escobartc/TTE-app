@@ -45,15 +45,6 @@ jobs:
         run: |
           mvn -f /home/runner/work/TTE-app/TTE-app/tte-app/pom.xml clean package
 
-      - name: Run tests with JaCoCo coverage
-        run: mvn -f tte-app/pom.xml test jacoco:report
-
-      - name: Upload code coverage report
-        uses: actions/upload-artifact@v2
-        with:
-          name: jacoco-report
-          path: tte-app/target/site/jacoco
-
       - name: Build Docker image
         run: docker build -t tech-trend-emporium-app:${{ github.event.pull_request.head.sha }} -f Dockerfile .
         working-directory: ./TTE-app
