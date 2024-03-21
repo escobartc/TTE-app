@@ -54,10 +54,10 @@ jobs:
           name: jacoco-report
           path: tte-app/target/site/jacoco
 
-      - name: Copy JAR file to Docker directory
-        run: |
-          cp /home/runner/work/TTE-app/TTE-app/tte-app/target/tte-app-0.0.1-SNAPSHOT.jar /home/runner/work/TTE-app/TTE-app/tte-app/
-          ls -l /home/runner/work/TTE-app/TTE-app/tte-app/
+      #- name: Copy JAR file to Docker directory
+      # run: |
+      #   cp /home/runner/work/TTE-app/TTE-app/tte-app/target/tte-app-0.0.1-SNAPSHOT.jar /home/runner/work/TTE-app/TTE-app/tte-app/
+      #   ls -l /home/runner/work/TTE-app/TTE-app/tte-app/
 
       - name: Build Docker image
         run: |
