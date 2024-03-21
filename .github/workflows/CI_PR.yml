@@ -92,7 +92,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           port: 22
           script: |
-          # Run commands on the remote server
+            # Run commands on the remote server
             echo "Connected to EC2 instance"
             # Get ECR login password
             ECR_PASSWORD=$(aws ecr get-login-password --region ${{ secrets.AWS_REGION }})
