@@ -9,7 +9,6 @@ import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +57,18 @@ public class ProductController {
     public ResponseEntity<List<ProductDTO>> getAllProducts() {
         List<ProductDTO> products = productService.getAllProducts();
         return new ResponseEntity<>(products, HttpStatus.OK);
+    }
+
+    @GetMapping("/store/products/{product_id}")
+    public ResponseEntity<Object> productDetail(@PathVariable Long product_id) {
+        Optional<ProductDTO> productOptional = productService.getProduct(product_id);
+        if (productOptional.isPresent()) {
+            ProductDTO product = productOptional.get();
+            return new ResponseEntity<>(product, HttpStatus.OK);
+        } else {
+            String errorMessage = "Product with id " + product_id + " not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", errorMessage)); // Return 404 Not Found with custom message
+        }
     }
 
     @PostMapping(path = "/product", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
