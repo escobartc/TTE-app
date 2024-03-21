@@ -18,12 +18,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class User implements UserDetails{
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "email")
+    private String name;
     private String email;
-    @Column(name = "username")
     private String username;
     private String password;
     private String role;

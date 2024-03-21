@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -16,10 +17,7 @@ public class ValidationResponse {
     private final ValidationError validationError;
     public ResponseEntity<Object> createDuplicateResponse(String field, String requestId) {
         log.warn("{} duplicated, requestId: {}", field, requestId);
-        return new ResponseEntity<>(validationError.getStructureError(HttpStatus.BAD_REQUEST.value(),
-                field + " exist in database"), HttpStatus.BAD_REQUEST);
+        throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, field + " exist in database");
     }
-
-
 
 }

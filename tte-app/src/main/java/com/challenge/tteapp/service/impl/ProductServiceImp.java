@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@AllArgsConstructor
 @Service
 @Slf4j
 public class ProductServiceImp implements ProductService {

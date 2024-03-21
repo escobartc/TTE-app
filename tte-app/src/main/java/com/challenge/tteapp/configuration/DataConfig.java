@@ -14,5 +14,5 @@ import org.springframework.context.annotation.PropertySource;
 public class DataConfig {
 
     private String secretKey;
-
+    private String pathStore;
 }

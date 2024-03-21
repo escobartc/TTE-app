@@ -2,12 +2,15 @@ package com.challenge.tteapp.configuration;
 
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +30,11 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final ValidationError validationError;
+    private final static String ADMIN = "ADMIN";
+    private final static String EMPLOYEE = "EMPLOYEE";
+    private final static String CUSTOMER = "CUSTOMER";
+
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -36,6 +44,7 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
             final String role;
             final String endpoint;
 
+        try {
         if (token == null) {
             filterChain.doFilter(request, response);
             return;
@@ -65,15 +74,20 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
         UserRoleContext.clear();
+    }catch (ExpiredJwtException e){
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter().write("{\"error\": \"Token expired\"}");
+        }
     }
 
     private boolean isAuthorized(String role,String endpoint) {
-        if (endpoint.equals("/api/admin/auth")) {
-            return role.equals("ADMIN");
+        if (endpoint.equals("/api/admin/auth") || endpoint.equals("/api/user")) {
+            return role.equals(ADMIN);
         } else if (endpoint.startsWith("/api/product")) {
-            return role.equals("ADMIN") || role.equals("employee");
+            return role.equals(ADMIN) || role.equals(EMPLOYEE);
         } else if (endpoint.startsWith("/api/category")) {
-            return role.equals("ADMIN") || role.equals("employee");
+            return role.equals(ADMIN) || role.equals(EMPLOYEE);
         } else {
             return false;
         }
