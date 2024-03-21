@@ -4,10 +4,7 @@ import com.challenge.tteapp.model.Category;
 import com.challenge.tteapp.model.Inventory;
 import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.Rating;
-import com.challenge.tteapp.model.dto.CategoryDTO;
-import com.challenge.tteapp.model.dto.InventoryDTO;
-import com.challenge.tteapp.model.dto.ProductDTO;
-import com.challenge.tteapp.model.dto.RatingDTO;
+import com.challenge.tteapp.model.dto.*;
 import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +27,31 @@ public class ProductController {
 
     private final ProductService productService;
     private final ProductRepository productRepository;
-    private static final String MESSAGE  = "message";
+    private static final String MESSAGE = "message";
+
+    @GetMapping("/product/{productId}/reviews")
+    public ResponseEntity<Object> getProductReviews(@PathVariable Long productId) {
+        List<ReviewDTO> reviews = productService.getProductReviews(productId);
+        if (reviews.isEmpty()) {
+            Map<String, String> responseBody = new HashMap<>();
+            responseBody.put(MESSAGE, "No reviews found for product");
+            return new ResponseEntity<>(responseBody, HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(reviews, HttpStatus.OK);
+        }
+    }
+
+    @PostMapping("/product/{productId}/reviews/add")
+    public ResponseEntity<Object> addProductReview(@PathVariable Long productId, @RequestBody ReviewDTO reviewDTO) {
+        try {
+            String requestId = UUID.randomUUID().toString();
+            ResponseEntity<Object> response = productService.addProductReview(productId, reviewDTO, requestId);
+            return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+        } catch (Exception e) {
+            log.error("Error creating review: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(MESSAGE, "Failed to create review"));
+        }
+    }
 
 
     @GetMapping("/product")
@@ -87,6 +108,7 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(MESSAGE, "Failed to update product"));
         }
     }
+
     @DeleteMapping(path = "/product", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> deleteProduct(@RequestBody Map<String, Long> requestBody, Authentication authentication) {
         try {
