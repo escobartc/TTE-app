@@ -9,6 +9,10 @@ import com.challenge.tteapp.repository.UserRepository;
 import com.challenge.tteapp.service.ProductService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,18 +39,46 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
+    public Page<ProductDTO> getAllProductsWithOrder(String orderBy, Pageable pageable) {
+        Sort sort;
+        if (!orderBy.isEmpty()) {
+            String[] orderByParts = orderBy.split(",");
+            String property = orderByParts[0];
+            String direction = "asc"; // Default direction is ascending
+            if (orderByParts.length > 1) {
+                direction = orderByParts[1];
+            }
+            if ("desc".equalsIgnoreCase(direction)) {
+                sort = Sort.by(property).descending();
+            } else {
+                sort = Sort.by(property).ascending();
+            }
+        } else {
+            sort = Sort.by("id");
+        }
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        return productRepository.findAll(pageable).map(this::mapProductDTOCustomer);
+    }
+
+
+    @Override
     public Optional<ProductDTO> getProduct(Long product_id) {
         Optional<Product> product = productRepository.findById(product_id);
         if (product.isPresent()) {
-            ProductDTO productDTO = mapToProductDTO(product.get());
-            productDTO.setImage(product.get().getImage());
-            productDTO.setDescription(product.get().getDescription());
-            productDTO.setRating(mapToRatingDTO(product.get().getRating()));
-            productDTO.setInventory(mapToInventoryDTO(product.get().getInventory()));
+            ProductDTO productDTO = mapProductDTOCustomer(product.get());
             return Optional.of(productDTO);
         } else {
             return Optional.empty();
         }
+    }
+
+    private ProductDTO mapProductDTOCustomer(Product product) {
+        ProductDTO productDTO = mapToProductDTO(product);
+        productDTO.setImage(product.getImage());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setRating(mapToRatingDTO(product.getRating()));
+        productDTO.setInventory(mapToInventoryDTO(product.getInventory()));
+        return productDTO;
     }
 
     private ProductDTO mapToProductDTO(Product product) {

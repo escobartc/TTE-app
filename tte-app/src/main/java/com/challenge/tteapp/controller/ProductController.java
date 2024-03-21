@@ -9,6 +9,9 @@ import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -144,6 +147,17 @@ public class ProductController {
             log.error("Error deleting product: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(MESSAGE, "Failed to delete product"));
         }
+    }
+
+    @GetMapping("/store/products")
+    public ResponseEntity<Page<ProductDTO>> getProductsWithPagination(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String orderBy,
+            Pageable pageable) {
+        pageable = PageRequest.of(page, size);
+        Page<ProductDTO> products = productService.getAllProductsWithOrder(orderBy, pageable);
+        return ResponseEntity.ok(products);
     }
 
     private static Product setProductFieldsForUpdate(ProductDTO productDTO, Product existingProduct) {
