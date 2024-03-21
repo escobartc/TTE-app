@@ -84,6 +84,12 @@ jobs:
       - name: Deploy docker image to EC2
         run: sudo apt-get install -y openssh-client
 
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ secrets.AWS_REGION }}
+
       - name: SSH into EC2 instance and deploy Docker image
         uses: appleboy/ssh-action@master
         with:
