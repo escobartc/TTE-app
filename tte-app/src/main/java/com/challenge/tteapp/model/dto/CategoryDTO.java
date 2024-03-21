@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties(value = {"state"}) // Exclude the "state" property from serialization
+@JsonIgnoreProperties(value = {"state","id"})
 public class CategoryDTO {
     private Long id;
     private String name;
