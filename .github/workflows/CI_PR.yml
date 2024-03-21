@@ -91,3 +91,7 @@ jobs:
 
             # Deploy Docker image
             sudo docker run -d -p 8080:8080 --name tteapp ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.event.pull_request.head.sha }}
+            
+            sudo docker ps
+            
+            sudo docker logs -f tteapp
