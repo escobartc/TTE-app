@@ -7,7 +7,7 @@ import com.challenge.tteapp.model.UsersList;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
 import com.challenge.tteapp.model.dto.UserDTO;
-import com.challenge.tteapp.model.usersDTO;
+import com.challenge.tteapp.model.UsersDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
@@ -15,28 +15,28 @@ import com.challenge.tteapp.repository.UserRepository;
 import com.challenge.tteapp.service.AdminService;
 import com.challenge.tteapp.service.ProductService;
 import com.challenge.tteapp.service.impl.AdminServiceImpl;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 
-@RunWith(MockitoJUnitRunner.class)
-public class AdminControllerTest {
-
+@ExtendWith(MockitoExtension.class)
+class AdminControllerTest {
     @Mock
     private ProductService productService;
     @Mock
@@ -59,7 +59,7 @@ public class AdminControllerTest {
     private ValidationError validationError;
 
     @Test
-    public void RegisterAdminTest() {
+    void RegisterAdminTest() {
         Admin admin = adminInfo();
 
         UserResponse userResponse = new UserResponse();
@@ -78,7 +78,7 @@ public class AdminControllerTest {
     }
 
     @Test
-    public void RegisterUser() {
+    void RegisterUser() {
         UserDTO userDTO = userInfo();
         UserResponse userResponse = new UserResponse();
         ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
@@ -95,11 +95,12 @@ public class AdminControllerTest {
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
         userDTO.setRole("other");
         assertThrows(HttpClientErrorException.class, () -> {
-            adminServiceImpl.register(userDTO, "requestId");});
+            adminServiceImpl.register(userDTO, "requestId");
+        });
     }
 
     @Test
-    public void loginAdmin() {
+    void loginAdmin() {
         LoginAdmin loginAdmin = adminLoginInfo();
         UserResponse userResponse = new UserResponse();
         ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
@@ -118,7 +119,7 @@ public class AdminControllerTest {
     }
 
     @Test
-    public void viewUserTest() {
+    void viewUserTest() {
         UsersList userResponse = new UsersList();
         ResponseEntity<UsersList> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
         when(adminService.viewUsers(anyString())).thenReturn(successResponse);
@@ -130,50 +131,58 @@ public class AdminControllerTest {
         users.add(new User());
         ResponseEntity<UsersList> response2 = adminServiceImpl.viewUsers("requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
+        User user = new User();
+        user.setState(1);
+        user.setEmail("email");
+        user.setRole("role");
+        user.setUsername("username");
+        adminServiceImpl.mapToUserDTO(user);
     }
+
     @Test
-    public void UserUpdate() {
+    void UserUpdate() {
         UserDTO userResponse = userInfo();
         ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
-        when(adminService.userUpdate(eq(userResponse) ,anyString())).thenReturn(successResponse);
+        when(adminService.userUpdate(eq(userResponse), anyString())).thenReturn(successResponse);
         ResponseEntity<Object> response = adminController.updatingUser(userResponse);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         when(userRepository.findElement(userResponse.getUsername())).thenReturn(new User());
-        ResponseEntity<Object> response2 = adminServiceImpl.userUpdate(userResponse,"requestId");
+        ResponseEntity<Object> response2 = adminServiceImpl.userUpdate(userResponse, "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
 
         when(userRepository.findElement(userResponse.getUsername())).thenReturn(null);
         assertThrows(HttpClientErrorException.class, () -> {
-                    adminServiceImpl.userUpdate(userResponse, "requestId");});
+            adminServiceImpl.userUpdate(userResponse, "requestId");
+        });
 
     }
 
     @Test
-    public void deleteUser() {
-        usersDTO userResponse = new usersDTO();
+    void deleteUser() {
+        UsersDTO userResponse = new UsersDTO();
         List<String> users = new ArrayList<>();
         users.add("employee");
         users.add("other");
         userResponse.setUsers(users);
 
         ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
-        when(adminService.deleteUser(eq(userResponse) ,anyString())).thenReturn(successResponse);
+        when(adminService.deleteUser(eq(userResponse), anyString())).thenReturn(successResponse);
         ResponseEntity<Object> response = adminController.deleteUser(userResponse);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
 
         when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(new User());
-        ResponseEntity<Object> response2 = adminServiceImpl.deleteUser(userResponse,"requestId");
+        ResponseEntity<Object> response2 = adminServiceImpl.deleteUser(userResponse, "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
 
         when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(null);
-        ResponseEntity<Object> response3 = adminServiceImpl.deleteUser(userResponse,"requestId");
+        ResponseEntity<Object> response3 = adminServiceImpl.deleteUser(userResponse, "requestId");
         assertEquals(HttpStatus.NOT_FOUND, response3.getStatusCode());
 
     }
 
     @Test
-    public void AdminValidationEmail() {
+    void AdminValidationEmail() {
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         Admin admin = adminInfo();
         when(userRepository.findElement(eq(admin.getEmail()))).thenReturn(new User());
@@ -181,15 +190,15 @@ public class AdminControllerTest {
 
         verify(validationResponse).createDuplicateResponse(eq("Email"), eq("requestId"));
     }
+
     @Test
-    public void AdminValidationUsername() {
+    void AdminValidationUsername() {
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         Admin admin = adminInfo();
-        when(userRepository.findElement(eq(admin.getUsername()))).thenReturn(new User());
+        lenient().when(userRepository.findElement(eq(admin.getUsername()))).thenReturn(new User());
         ResponseEntity<Object> response2 = adminServiceImpl.registerAdmin(admin, "requestId");
         verify(validationResponse).createDuplicateResponse(eq("Username"), eq("requestId"));
     }
-
 
 
     private static Admin adminInfo() {
@@ -215,8 +224,6 @@ public class AdminControllerTest {
         userDTO.setRole("employee");
         return userDTO;
     }
-
-
 
 
 }

@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+import static com.challenge.tteapp.model.Constants.MESSAGE;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -26,7 +28,6 @@ public class ProductController {
 
     private final ProductService productService;
     private final ProductRepository productRepository;
-    private static final String MESSAGE = "message";
 
     @GetMapping("/store/product/{productId}/reviews")
     public ResponseEntity<Object> getProductReviews(@PathVariable Long productId) {
@@ -75,9 +76,8 @@ public class ProductController {
     public ResponseEntity<Object> createProduct(@RequestBody ProductDTO product, Authentication authentication) {
         try {
             String requestId = UUID.randomUUID().toString();
-            log.info("JOIN TO TTE-APP with requestId: {}", requestId);
+            log.info("JOIN TO TTE-APP with requestId: [{}]", requestId);
             verifyAuthorizationForCreation(product, authentication);
-            // Save the product
             ResponseEntity<Object> response = productService.saveProduct(product, requestId);
             Map<String, Object> responseBody = getStringObjectMap(response);
             return ResponseEntity.status(response.getStatusCode()).body(responseBody);
@@ -91,28 +91,23 @@ public class ProductController {
     public ResponseEntity<Object> updateProduct(@RequestBody ProductDTO productDTO) {
         try {
             String requestId = UUID.randomUUID().toString();
-            log.info("JOIN TO TTE-APP with requestId: {}", requestId);
+            log.info("JOIN TO TTE-APP with requestId: [{}]", requestId);
 
-            // Check if the product ID is provided
             Long productId = productDTO.getId();
             if (productId == null) {
                 return ResponseEntity.badRequest().body(Map.of(MESSAGE, "Product ID is required"));
             }
 
-            // Retrieve the existing product from the database
             Optional<Product> existingProductOptional = productRepository.findById(productId);
             if (existingProductOptional.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
             Product existingProduct = existingProductOptional.get();
 
-            // Set the product fields for update
             existingProduct = setProductFieldsForUpdate(productDTO, existingProduct);
 
-            // Save the updated product back to the database
             productRepository.save(existingProduct);
 
-            // Return success message
             return ResponseEntity.ok().body(Map.of(MESSAGE, "Updated successfully"));
         } catch (Exception e) {
             log.error("Error updating product: {}", e.getMessage());
@@ -124,14 +119,11 @@ public class ProductController {
     public ResponseEntity<Object> deleteProduct(@RequestBody Map<String, Long> requestBody, Authentication authentication) {
         try {
             Long productId = requestBody.get("id");
-            // Get the authenticated user's authorities (roles)
             Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-            // Check if the user has the "superAdmin" role
             boolean isEmployee = authorities.stream()
                     .anyMatch(authority -> authority.getAuthority().equals("ROLE_employee"));
 
-            // Retrieve the existing product from the database
             Optional<Product> existingProductOptional = productRepository.findById(productId);
             if (existingProductOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(MESSAGE, "Product with provided ID not found"));
@@ -139,17 +131,14 @@ public class ProductController {
 
             Product existingProduct = existingProductOptional.get();
 
-            // If the user is a superAdmin, delete the product from the database
             if (!isEmployee) {
                 productRepository.deleteById(productId);
                 return ResponseEntity.ok().body(Map.of(MESSAGE, "Product deleted successfully"));
             }
 
-            // If the user is an employee, change the state of the product to "Pending"
             existingProduct.setState("Pending for deletion");
             productRepository.save(existingProduct);
 
-            // Return success message
             return ResponseEntity.ok().body(Map.of(MESSAGE, "Product state changed to Pending for deletion"));
         } catch (Exception e) {
             log.error("Error deleting product: {}", e.getMessage());
@@ -158,7 +147,7 @@ public class ProductController {
     }
 
     private static Product setProductFieldsForUpdate(ProductDTO productDTO, Product existingProduct) {
-        // Update the product fields with the new values if they are not null in the request body
+
         if (productDTO.getTitle() != null) {
             existingProduct.setTitle(productDTO.getTitle());
         }
@@ -169,7 +158,6 @@ public class ProductController {
             existingProduct.setDescription(productDTO.getDescription());
         }
         if (productDTO.getCategory() != null) {
-            // Assuming productDTO.getCategory() returns a CategoryDTO object
             CategoryDTO categoryDTO = productDTO.getCategory();
             Category category = new Category();
             category.setId(categoryDTO.getId()); // Set the ID of the category
@@ -203,10 +191,8 @@ public class ProductController {
 
 
     private static void verifyAuthorizationForCreation(ProductDTO product, Authentication authentication) {
-        // Get the authenticated user's authorities (roles)
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        // Check if the user has the "employee" role
         boolean isEmployee = authorities.stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_employee"));
 

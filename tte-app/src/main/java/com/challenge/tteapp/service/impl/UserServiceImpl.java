@@ -14,12 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +41,7 @@ public class UserServiceImpl implements UserService {
             String name = userAuth.getUsername();
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
             if (userAuth.getState().equals(1)) {
-                log.warn("The user is already logged in, requestId: {}", requestId);
+                log.warn("The user is already logged in, requestId: [{}]", requestId);
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user is already logged in");
             } else {
                 userAuth.setState(1);
@@ -62,7 +59,7 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public ResponseEntity<Object> registerShopper(ShopperDTO shopperDTO, String requestId) {
-        log.info("Save Shopper information in database, requestId: {}", requestId);
+        log.info("Save Shopper information in database, requestId: [{}]", requestId);
         if (userRepository.findElement(shopperDTO.getEmail()) != null) {
             return validationResponse.createDuplicateResponse("Email", requestId);
         }
@@ -99,7 +96,7 @@ public class UserServiceImpl implements UserService {
                 log.warn("The user is already logout, requestId: {}", requestId);
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user is already logout");
             }
-            return new ResponseEntity<>(new Status("ok"), HttpStatus.CREATED);
+            return new ResponseEntity<>(new StatusResponse("ok"), HttpStatus.CREATED);
 
         }catch (AuthenticationException e) {
             throw new AuthenticationException("Incorrect email or password") {};

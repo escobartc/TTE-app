@@ -16,7 +16,7 @@ public class ValidationResponse {
 
     private final ValidationError validationError;
     public ResponseEntity<Object> createDuplicateResponse(String field, String requestId) {
-        log.warn("{} duplicated, requestId: {}", field, requestId);
+        log.warn("{} duplicated, with requestId: [{}]", field, requestId);
         throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, field + " exist in database");
     }
 

@@ -30,13 +30,10 @@ public class CategoryController {
     public ResponseEntity<Object> createCategory(@RequestBody CategoryDTO categoryDTO, Authentication authentication) {
         try {
             String requestId = UUID.randomUUID().toString();
-            log.info("JOIN TO TTE-APP with requestId: {}", requestId);
-
-            // Check authorization
+            log.info("JOIN TO TTE-APP with requestId: [{}]", requestId);
             boolean isEmployee = checkAuthorization(authentication);
             categoryDTO.setState(isEmployee ? "Pending" : "Approved");
 
-            // Save category
             ResponseEntity<Object> response = categoryService.saveCategory(categoryDTO, requestId);
             Map<String, Object> responseBody = getStringObjectMap(response);
 
@@ -62,10 +59,8 @@ public class CategoryController {
 
 
     private static boolean checkAuthorization(Authentication authentication) {
-        // Get the authenticated user's authorities (roles)
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        // Check if the user has the "superAdmin" role
         return authorities.stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_employee"));
     }

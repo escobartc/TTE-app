@@ -102,6 +102,33 @@ public class ProductServiceImp implements ProductService {
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
 
+    public static Product copyProductForDB(ProductDTO productDTO) {
+        // Create a new Product entity
+        Product product = new Product();
+
+        // Set simple properties directly
+        product.setTitle(productDTO.getTitle());
+        product.setPrice(productDTO.getPrice());
+        product.setDescription(productDTO.getDescription());
+        product.setImage(productDTO.getImage());
+        product.setState(productDTO.getState());
+
+        // Create Rating entity and set properties
+        Rating rating = new Rating();
+        rating.setRate(productDTO.getRating().getRate());
+        rating.setCount(productDTO.getRating().getCount());
+
+        // Create Inventory entity and set properties
+        Inventory inventory = new Inventory();
+        inventory.setTotal(productDTO.getInventory().getTotal());
+        inventory.setAvailable(productDTO.getInventory().getAvailable());
+
+        // Set Rating and Inventory entities to the Product
+        product.setRating(rating);
+        product.setInventory(inventory);
+        return product;
+    }
+
     @Override
     public List<ReviewDTO> getProductReviews(Long productId) {
         return productRepository.findById(productId)
@@ -113,7 +140,7 @@ public class ProductServiceImp implements ProductService {
     }
 
 
-    public ReviewDTO convertToReviewDTO(Review review,Long productId) {
+    public ReviewDTO convertToReviewDTO(Review review, Long productId) {
         // Convert the Review object to a ReviewDTO object
         ReviewDTO reviewDTO = new ReviewDTO();
         reviewDTO.setUser(review.getUser());
@@ -171,35 +198,10 @@ public class ProductServiceImp implements ProductService {
         Optional<Product> product = productRepository.findById(productId);
         return product.isPresent();
     }
+
     public boolean doesUserExist(String username) {
         Optional<User> user = userRepository.findByUsername(username);
         return user.isPresent();
     }
 
-    private static Product copyProductForDB(ProductDTO productDTO) {
-        // Create a new Product entity
-        Product product = new Product();
-
-        // Set simple properties directly
-        product.setTitle(productDTO.getTitle());
-        product.setPrice(productDTO.getPrice());
-        product.setDescription(productDTO.getDescription());
-        product.setImage(productDTO.getImage());
-        product.setState(productDTO.getState());
-
-        // Create Rating entity and set properties
-        Rating rating = new Rating();
-        rating.setRate(productDTO.getRating().getRate());
-        rating.setCount(productDTO.getRating().getCount());
-
-        // Create Inventory entity and set properties
-        Inventory inventory = new Inventory();
-        inventory.setTotal(productDTO.getInventory().getTotal());
-        inventory.setAvailable(productDTO.getInventory().getAvailable());
-
-        // Set Rating and Inventory entities to the Product
-        product.setRating(rating);
-        product.setInventory(inventory);
-        return product;
     }
-}

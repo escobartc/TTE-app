@@ -27,7 +27,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
                 e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<Object> AuthenticationException(AuthenticationException e) {
+    public ResponseEntity<Object> authenticationException(AuthenticationException e) {
         log.error(e.getMessage(),HttpStatus.UNAUTHORIZED.value());
         return new ResponseEntity<>(validationError.getStructureError(String.valueOf(HttpStatus.UNAUTHORIZED),
                 e.getMessage()), HttpStatus.UNAUTHORIZED);

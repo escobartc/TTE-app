@@ -1,19 +1,16 @@
 package com.challenge.tteapp;
 
 import com.challenge.tteapp.controller.ProductController;
-import com.challenge.tteapp.model.Product;
-import com.challenge.tteapp.model.dto.CategoryDTO;
-import com.challenge.tteapp.model.dto.InventoryDTO;
-import com.challenge.tteapp.model.dto.ProductDTO;
-import com.challenge.tteapp.model.dto.RatingDTO;
+import com.challenge.tteapp.model.*;
+import com.challenge.tteapp.model.dto.*;
 import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.service.ProductService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,8 +21,8 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ProductControllerTest {
+@ExtendWith(MockitoExtension.class)
+class ProductControllerTest {
 
     @Mock
     private ProductService productService;
@@ -37,7 +34,7 @@ public class ProductControllerTest {
     private ProductController productController;
 
     @Test
-    public void testCreateProduct_Success() {
+    void testCreateProduct_Success() {
         // Mock data
         ProductDTO productDTO = getProductDTOForTest();
         Product savedProduct = new Product();
@@ -58,7 +55,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testGetAllProducts_Success() {
+    void testGetAllProducts_Success() {
         // Mock data
         List<ProductDTO> products = Arrays.asList(getProductDTOForTest(), getProductDTOForTest()); // Mocked products
         when(productService.getAllProducts()).thenReturn(products);
@@ -72,7 +69,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testUpdateProduct_Success() {
+    void testUpdateProduct_Success() {
         // Mock data
         ProductDTO productDTO = getProductDTOForTest();
         productDTO.setId(1L); // Existing product ID
@@ -89,7 +86,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testDeleteProduct_Success() {
+    void testDeleteProduct_Success() {
         // Mock data
         Long productId = 1L;
 
@@ -105,7 +102,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testDeleteProduct_NotFound() {
+    void testDeleteProduct_NotFound() {
         // Mock data
         Long productId = 1L;
 

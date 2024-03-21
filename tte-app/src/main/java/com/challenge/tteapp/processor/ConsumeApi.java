@@ -14,6 +14,6 @@ public class ConsumeApi implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        consumeApiService.fetchAndProcessProducts();
+        consumeApiService.consumeApi();
     }
 }
