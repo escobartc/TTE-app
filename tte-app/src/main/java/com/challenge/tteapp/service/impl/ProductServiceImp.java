@@ -5,18 +5,20 @@ import com.challenge.tteapp.model.Inventory;
 import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.Rating;
 import com.challenge.tteapp.model.dto.CategoryDTO;
+import com.challenge.tteapp.model.dto.InventoryDTO;
 import com.challenge.tteapp.model.dto.ProductDTO;
+import com.challenge.tteapp.model.dto.RatingDTO;
 import com.challenge.tteapp.repository.CategoryRepository;
 import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.service.ProductService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @AllArgsConstructor
 @Service
@@ -33,6 +35,21 @@ public class ProductServiceImp implements ProductService {
                 .toList();
     }
 
+    @Override
+    public Optional<ProductDTO> getProduct(Long product_id) {
+        Optional<Product> product = productRepository.findById(product_id);
+        if (product.isPresent()) {
+            ProductDTO productDTO = mapToProductDTO(product.get());
+            productDTO.setImage(product.get().getImage());
+            productDTO.setDescription(product.get().getDescription());
+            productDTO.setRating(mapToRatingDTO(product.get().getRating()));
+            productDTO.setInventory(mapToInventoryDTO(product.get().getInventory()));
+            return Optional.of(productDTO);
+        } else {
+            return Optional.empty();
+        }
+    }
+
     private ProductDTO mapToProductDTO(Product product) {
         ProductDTO productDTO = new ProductDTO();
         productDTO.setId(product.getId());
@@ -47,6 +64,22 @@ public class ProductServiceImp implements ProductService {
         categoryDTO.setId(category.getId());
         categoryDTO.setName(category.getName());
         return categoryDTO;
+    }
+
+    private InventoryDTO mapToInventoryDTO(Inventory inventory) {
+        InventoryDTO inventoryDTO = new InventoryDTO();
+        inventoryDTO.setId(inventory.getId());
+        inventoryDTO.setAvailable(inventory.getAvailable());
+        inventoryDTO.setTotal(inventory.getTotal());
+        return inventoryDTO;
+    }
+
+    private RatingDTO mapToRatingDTO(Rating rating) {
+        RatingDTO ratingDTO = new RatingDTO();
+        ratingDTO.setId(rating.getId());
+        ratingDTO.setRate(rating.getRate());
+        ratingDTO.setCount(rating.getCount());
+        return ratingDTO;
     }
 
     public ResponseEntity<Object> saveProduct(ProductDTO productDTO, String requestId) {
