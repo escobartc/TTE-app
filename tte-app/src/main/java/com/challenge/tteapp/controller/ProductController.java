@@ -30,13 +30,25 @@ public class ProductController {
 
     private final ProductService productService;
     private final ProductRepository productRepository;
-    private static final String MESSAGE  = "message";
+    private static final String MESSAGE = "message";
 
 
     @GetMapping("/product")
     public ResponseEntity<List<ProductDTO>> getAllProducts() {
         List<ProductDTO> products = productService.getAllProducts();
         return new ResponseEntity<>(products, HttpStatus.OK);
+    }
+
+    @GetMapping("/store/products/{product_id}")
+    public ResponseEntity<Object> productDetail(@PathVariable Long product_id) {
+        Optional<ProductDTO> productOptional = productService.getProduct(product_id);
+        if (productOptional.isPresent()) {
+            ProductDTO product = productOptional.get();
+            return new ResponseEntity<>(product, HttpStatus.OK);
+        } else {
+            String errorMessage = "Product with id " + product_id + " not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", errorMessage)); // Return 404 Not Found with custom message
+        }
     }
 
     @PostMapping(path = "/product", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -87,6 +99,7 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(MESSAGE, "Failed to update product"));
         }
     }
+
     @DeleteMapping(path = "/product", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> deleteProduct(@RequestBody Map<String, Long> requestBody, Authentication authentication) {
         try {
