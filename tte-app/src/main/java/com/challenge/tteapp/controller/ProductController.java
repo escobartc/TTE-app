@@ -29,7 +29,7 @@ public class ProductController {
     private final ProductRepository productRepository;
     private static final String MESSAGE = "message";
 
-    @GetMapping("/product/{productId}/reviews")
+    @GetMapping("/store/product/{productId}/reviews")
     public ResponseEntity<Object> getProductReviews(@PathVariable Long productId) {
         List<ReviewDTO> reviews = productService.getProductReviews(productId);
         if (reviews.isEmpty()) {
@@ -41,7 +41,7 @@ public class ProductController {
         }
     }
 
-    @PostMapping("/product/{productId}/reviews/add")
+    @PostMapping("/store/product/{productId}/reviews/add")
     public ResponseEntity<Object> addProductReview(@PathVariable Long productId, @RequestBody ReviewDTO reviewDTO) {
         try {
             String requestId = UUID.randomUUID().toString();
