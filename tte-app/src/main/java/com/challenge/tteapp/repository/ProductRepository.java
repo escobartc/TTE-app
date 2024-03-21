@@ -2,9 +2,16 @@ package com.challenge.tteapp.repository;
 
 import com.challenge.tteapp.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
+@Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByInventoryAvailableGreaterThan(int available);
+    @Query("SELECT w.articleId FROM WishList w WHERE w.user = :userId")
+    List<Integer> findArticleIdsByUserId(@Param("userId") Long userId);
+    @Query("SELECT id FROM Product")
+    List<Integer> findProductById();
 }
