@@ -10,6 +10,8 @@ ENV SECRET_KEY=$SECRET_KEY
 ENV PATH_STORE=$PATH_STORE
 
 # Print the contents of the target directory
+# Add a random file to invalidate cache
+RUN touch /random_file.txt
 RUN pwd
 RUN ls -l /home/runner/work/TTE-app/TTE-app/tte-app/target
 RUN ls -l ./..
