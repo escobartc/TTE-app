@@ -15,7 +15,7 @@ WORKDIR /app
 EXPOSE 8080
 
 # Copy the JAR file into the container
-COPY app.jar /app/app.jar
+COPY target/tte-app-0.0.1-SNAPSHOT.jar /app/app.jar
 
 # Specify the command to run your Spring Boot application
 CMD ["java", "-jar", "app.jar"]
