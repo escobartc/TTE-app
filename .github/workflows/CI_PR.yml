@@ -81,4 +81,18 @@ jobs:
       - name: Push Docker image to Amazon ECR
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.event.pull_request.head.sha }}
-      # ...
+      - name: Deploy docker image to EC2
+        run: sudo apt-get install -y openssh-client
+
+        # Connect to EC2 instance and execute commands
+      - name: SSH into EC2 instance
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Run commands on the remote server
+            echo "Connected to EC2 instance"
+            
