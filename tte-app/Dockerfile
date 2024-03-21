@@ -8,11 +8,10 @@ ENV USERNAME=$DB_USERNAME
 ENV PORT=$DB_PORT
 ENV SECRET_KEY=$SECRET_KEY
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Expose the port that your Spring Boot application runs on
+COPY target/tte-app-0.0.1-SNAPSHOT.jar /app/app.jar
+
 EXPOSE 8080
 
-# Specify the command to run your Spring Boot application
 CMD ["java", "-jar", "app.jar"]
