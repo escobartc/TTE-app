@@ -84,8 +84,7 @@ jobs:
       - name: Deploy docker image to EC2
         run: sudo apt-get install -y openssh-client
 
-        # Connect to EC2 instance and execute commands
-      - name: SSH into EC2 instance
+      - name: SSH into EC2 instance and deploy Docker image
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -95,4 +94,8 @@ jobs:
           script: |
             # Run commands on the remote server
             echo "Connected to EC2 instance"
-            
+            # Login to Amazon ECR and pull the latest image
+            sudo $(aws ecr get-login --no-include-email --region us-east-2)
+            sudo docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.event.pull_request.head.sha }}
+            # Deploy Docker image (replace <image_name> with the actual image name)
+            sudo docker run -d -p 8080:8080 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.event.pull_request.head.sha }}
