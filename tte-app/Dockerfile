@@ -14,5 +14,8 @@ WORKDIR /app
 # Expose the port that your Spring Boot application runs on
 EXPOSE 8080
 
+# Copy the JAR file from the Docker directory into the container
+COPY target/tte-app-0.0.1-SNAPSHOT.jar /app/app.jar
+
 # Specify the command to run your Spring Boot application
 CMD ["java", "-jar", "app.jar"]
