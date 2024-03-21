@@ -42,6 +42,7 @@ jobs:
           export DB_USERNAME="${{ secrets.DB_USERNAME }}"
           export DB_PORT="${{ secrets.DB_PORT }}"
           export SECRET_KEY="${{ secrets.SECRET_KEY }}"
+          export PATH_STORE="${{ secrets.PATH_STORE }}"
       - name: Change to project directory
         run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
@@ -64,9 +65,10 @@ jobs:
           name: jacoco-report
           path: tte-app/target/site/jacoco
 
-      
       - name: Copy JAR file to Docker directory
-        run: cp /home/runner/work/TTE-app/TTE-app/tte-app/target/tte-app-0.0.1-SNAPSHOT.jar /home/runner/work/TTE-app/TTE-app/tte-app/
+        run: |
+          cp /home/runner/work/TTE-app/TTE-app/tte-app/target/tte-app-0.0.1-SNAPSHOT.jar /home/runner/work/TTE-app/TTE-app/tte-app/target/
+          ls -l /home/runner/work/TTE-app/TTE-app/tte-app/target/
 
       - name: Build Docker image
         run: |
