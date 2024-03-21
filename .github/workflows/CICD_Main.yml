@@ -37,7 +37,8 @@ jobs:
           export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
           export DB_USERNAME="${{ secrets.DB_USERNAME }}"
           export DB_PORT="${{ secrets.DB_PORT }}"
-          export SECRET_KEY="${{ secrets.SECRET_KEY }}"     
+          export SECRET_KEY="${{ secrets.SECRET_KEY }}"
+          export PATH_STORE="${{ secrets.PATH_STORE }}"
       - name: Change to project directory
         run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
