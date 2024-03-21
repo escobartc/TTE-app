@@ -35,14 +35,13 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     private final ValidationError validationError;
     private final UserRepository userRepository;
 
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-            final String token = getTokenFromRequest(request);
-            final String email;
-            final String role;
-            final String endpoint;
+        final String token = getTokenFromRequest(request);
+        final String email;
+        final String role;
+        final String endpoint;
 
         try {
         if (token == null) {
@@ -82,11 +81,13 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         }
     }
 
-    private boolean isAuthorized(String role,String endpoint) {
+    private boolean isAuthorized(String role, String endpoint) {
         if (endpoint.equals("/api/admin/auth") || endpoint.equals("/api/user")) {
             return role.equals(ADMIN);
         } else if (endpoint.startsWith("/api/product")) {
             return role.equals(ADMIN) || role.equals(EMPLOYEE);
+        } else if (endpoint.startsWith("/api/store")) {
+            return role.equals(CUSTOMER);
         } else if (endpoint.startsWith("/api/category")) {
             return role.equals(ADMIN) || role.equals(EMPLOYEE);
         }else if (endpoint.startsWith("/api/user/wishlist") || endpoint.startsWith("api/user/wishlist/add")) {
@@ -96,10 +97,10 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         }
     }
 
-    private String getTokenFromRequest(HttpServletRequest request){
-        final String authHeader=request.getHeader(HttpHeaders.AUTHORIZATION);
-        if(StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")){
-            return  authHeader.substring(7);
+    private String getTokenFromRequest(HttpServletRequest request) {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
         }
         return null;
     }

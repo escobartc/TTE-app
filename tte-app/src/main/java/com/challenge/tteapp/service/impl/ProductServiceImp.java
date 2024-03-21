@@ -1,22 +1,23 @@
 package com.challenge.tteapp.service.impl;
 
-import com.challenge.tteapp.model.Category;
-import com.challenge.tteapp.model.Inventory;
-import com.challenge.tteapp.model.Product;
-import com.challenge.tteapp.model.Rating;
-import com.challenge.tteapp.model.dto.CategoryDTO;
-import com.challenge.tteapp.model.dto.ProductDTO;
+import com.challenge.tteapp.model.*;
+import com.challenge.tteapp.model.dto.*;
 import com.challenge.tteapp.repository.CategoryRepository;
 import com.challenge.tteapp.repository.ProductRepository;
+import com.challenge.tteapp.repository.ReviewRepository;
+import com.challenge.tteapp.repository.UserRepository;
 import com.challenge.tteapp.service.ProductService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 
 @AllArgsConstructor
 @Service
@@ -25,12 +26,59 @@ public class ProductServiceImp implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
+    private final String ERROR = "error";
+
 
     @Override
     public List<ProductDTO> getAllProducts() {
-        return productRepository.findByInventoryAvailableGreaterThan(0).stream()
+        return productRepository.findAll().stream()
                 .map(this::mapToProductDTO)
                 .toList();
+    }
+
+    @Override
+    public Page<ProductDTO> getAllProductsWithOrder(String orderBy, Pageable pageable) {
+        Sort sort;
+        if (!orderBy.isEmpty()) {
+            String[] orderByParts = orderBy.split(",");
+            String property = orderByParts[0];
+            String direction = "asc"; // Default direction is ascending
+            if (orderByParts.length > 1) {
+                direction = orderByParts[1];
+            }
+            if ("desc".equalsIgnoreCase(direction)) {
+                sort = Sort.by(property).descending();
+            } else {
+                sort = Sort.by(property).ascending();
+            }
+        } else {
+            sort = Sort.by("id");
+        }
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        return productRepository.findAll(pageable).map(this::mapProductDTOCustomer);
+    }
+
+
+    @Override
+    public Optional<ProductDTO> getProduct(Long product_id) {
+        Optional<Product> product = productRepository.findById(product_id);
+        if (product.isPresent()) {
+            ProductDTO productDTO = mapProductDTOCustomer(product.get());
+            return Optional.of(productDTO);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private ProductDTO mapProductDTOCustomer(Product product) {
+        ProductDTO productDTO = mapToProductDTO(product);
+        productDTO.setImage(product.getImage());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setRating(mapToRatingDTO(product.getRating()));
+        productDTO.setInventory(mapToInventoryDTO(product.getInventory()));
+        return productDTO;
     }
 
     private ProductDTO mapToProductDTO(Product product) {
@@ -49,6 +97,22 @@ public class ProductServiceImp implements ProductService {
         return categoryDTO;
     }
 
+    private InventoryDTO mapToInventoryDTO(Inventory inventory) {
+        InventoryDTO inventoryDTO = new InventoryDTO();
+        inventoryDTO.setId(inventory.getId());
+        inventoryDTO.setAvailable(inventory.getAvailable());
+        inventoryDTO.setTotal(inventory.getTotal());
+        return inventoryDTO;
+    }
+
+    private RatingDTO mapToRatingDTO(Rating rating) {
+        RatingDTO ratingDTO = new RatingDTO();
+        ratingDTO.setId(rating.getId());
+        ratingDTO.setRate(rating.getRate());
+        ratingDTO.setCount(rating.getCount());
+        return ratingDTO;
+    }
+
     public ResponseEntity<Object> saveProduct(ProductDTO productDTO, String requestId) {
         Product product = copyProductForDB(productDTO);
 
@@ -59,7 +123,6 @@ public class ProductServiceImp implements ProductService {
             category = new Category();
             category.setName(productDTO.getCategory().getName());
             category.setState(productDTO.getState());
-            System.out.println(productDTO.getState());
             category = categoryRepository.save(category);
         }
         product.setCategory(category);
@@ -97,4 +160,80 @@ public class ProductServiceImp implements ProductService {
         product.setInventory(inventory);
         return product;
     }
-}
+
+    @Override
+    public List<ReviewDTO> getProductReviews(Long productId) {
+        return productRepository.findById(productId)
+                .map(product -> product.getReviews().stream()
+                        .map(review -> convertToReviewDTO(review, productId))
+                        .toList()
+                )
+                .orElse(Collections.emptyList());
+    }
+
+
+    public ReviewDTO convertToReviewDTO(Review review, Long productId) {
+        // Convert the Review object to a ReviewDTO object
+        ReviewDTO reviewDTO = new ReviewDTO();
+        reviewDTO.setUser(review.getUser());
+        reviewDTO.setComment(review.getComment());
+        reviewDTO.setProductId(productId);
+        // Set other properties as needed
+        return reviewDTO;
+    }
+
+
+    @Override
+    public ResponseEntity<Object> addProductReview(Long productId, ReviewDTO reviewDTO, String requestId) {
+        Review review = new Review();
+        boolean validUser = doesUserExist(reviewDTO.getUser());
+        boolean validProduct = doesProductExist(productId);
+        boolean validComment = !reviewDTO.getComment().isEmpty();
+
+        if (validUser && validProduct && validComment) {
+            // Get the product from the database using its ID
+            Optional<Product> productOptional = productRepository.findById(productId);
+            if (productOptional.isPresent()) {
+                Product product = productOptional.get();
+                // Set the product association in the review
+                review.setProduct_id(product);
+                review.setUser(reviewDTO.getUser());
+                review.setComment(reviewDTO.getComment());
+                Review savedReview = reviewRepository.save(review);
+                Map<String, Object> responseBody = new HashMap<>();
+                responseBody.put("review_id", savedReview.getId());
+                responseBody.put("message", "Successful");
+                return new ResponseEntity<>(responseBody, HttpStatus.CREATED);
+            } else {
+                // Handle the case where the product does not exist
+                return ResponseEntity.badRequest().body("Invalid product ID: " + productId);
+            }
+        } else {
+            // Handle invalid fields
+            Map<String, String> response = new HashMap<>();
+            if (!validUser) {
+                response.put("userError", "User with provided username does not exist");
+            }
+            if (!validProduct) {
+                response.put("productError", "Invalid product or product does not exist");
+            }
+            if (!validComment) {
+                response.put("commentError", "Invalid comment, should not be empty");
+            }
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
+    @Override
+    public boolean doesProductExist(Long productId) {
+        Optional<Product> product = productRepository.findById(productId);
+        return product.isPresent();
+    }
+
+    public boolean doesUserExist(String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+        return user.isPresent();
+    }
+
+    }

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Entity
@@ -46,5 +47,8 @@ public class Product {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "inventory_id", referencedColumnName = "id")
     private Inventory inventory;
+
+    @OneToMany(mappedBy = "product_id", cascade = CascadeType.ALL)
+    private List<Review> reviews;
 }
 
