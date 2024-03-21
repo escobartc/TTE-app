@@ -15,6 +15,6 @@ public class WishList {
     @Column(name = "user_id")
     private Long user;
 
-    @Column(name = "article_id")
+    @Column(name = "product_id")
     private int articleId;
 }
