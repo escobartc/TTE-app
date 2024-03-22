@@ -1,14 +1,10 @@
 name: CI_PR
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   pull_request:
     branches: [ "*" ]
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,7 +14,6 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -29,11 +24,10 @@ jobs:
           java-version: '17'
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ secrets.AWS_REGION }}
 
       - name: Set environment variables for secrets
         run: |
@@ -42,17 +36,13 @@ jobs:
           export DB_USERNAME="${{ secrets.DB_USERNAME }}"
           export DB_PORT="${{ secrets.DB_PORT }}"
           export SECRET_KEY="${{ secrets.SECRET_KEY }}"
+          export PATH_STORE="${{ secrets.PATH_STORE }}"
+
       - name: Change to project directory
         run: cd /home/runner/work/TTE-app/TTE-app/tte-app
 
-      # Use the appropriate commit SHA based on the event type
       - name: Build with Maven
         run: |
-          if [[ github.event.name == 'push' ]]; then
-            COMMIT_SHA=${{ github.sha }}
-          else
-            COMMIT_SHA=${{ github.event.pull_request.head.sha }}
-          fi
           mvn -f /home/runner/work/TTE-app/TTE-app/tte-app/pom.xml clean package
 
       - name: Run tests with JaCoCo coverage
@@ -64,13 +54,10 @@ jobs:
           name: jacoco-report
           path: tte-app/target/site/jacoco
 
-      
-      - name: Copy JAR file to Docker directory
-        run: cp /home/runner/work/TTE-app/TTE-app/tte-app/target/tte-app-0.0.1-SNAPSHOT.jar /home/runner/work/TTE-app/TTE-app/tte-app/
-
       - name: Build Docker image
-        run: |
-          docker build -t tech-trend-emporium-app:${{ github.event.pull_request.head.sha }} -f /home/runner/work/TTE-app/TTE-app/tte-app/Dockerfile .
+        run: docker build -t tech-trend-emporium-app:${{ github.event.pull_request.head.sha }} -f Dockerfile .
+        working-directory: /home/runner/work/TTE-app/TTE-app/tte-app
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -81,4 +68,3 @@ jobs:
       - name: Push Docker image to Amazon ECR
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.event.pull_request.head.sha }}
-      # ...

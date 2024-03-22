@@ -2,9 +2,10 @@ spring:
   banner:
     location: classpath:logo.ascii
   datasource:
-    url: ${URL}
-    password: ${PASSWORD}
-    username: ${USERNAME}
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   application:
     name: tech-trend-emporium
 service:
@@ -12,7 +13,7 @@ service:
   controller:
     path: /api
 server:
-  port: ${PORT}
+  port: ${DB_PORT}
 data:
   secretKey: ${SECRET_KEY}
   pathStore: ${PATH_STORE}

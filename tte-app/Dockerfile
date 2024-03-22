@@ -7,12 +7,13 @@ ENV PASSWORD=$DB_PASSWORD
 ENV USERNAME=$DB_USERNAME
 ENV PORT=$DB_PORT
 ENV SECRET_KEY=$SECRET_KEY
+ENV PATH_STORE=$PATH_STORE
 
-# Set the working directory inside the container
-WORKDIR /app
+# Copy the JAR file to the app directory
+COPY target/*.jar /app/app.jar
 
 # Expose the port that your Spring Boot application runs on
 EXPOSE 8080
 
 # Specify the command to run your Spring Boot application
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "/app/app.jar"]

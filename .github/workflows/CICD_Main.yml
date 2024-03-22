@@ -1,0 +1,109 @@
+name: Main Branch CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ secrets.AWS_REGION }}
+
+      - name: Set environment variables for secrets
+        run: |
+          export DB_URL="${{ secrets.DB_URL }}"
+          export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+          export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+          export DB_PORT="${{ secrets.DB_PORT }}"
+          export SECRET_KEY="${{ secrets.SECRET_KEY }}"
+          export PATH_STORE="${{ secrets.PATH_STORE }}"
+
+      - name: Change to project directory
+        run: cd /home/runner/work/TTE-app/TTE-app/tte-app
+
+      - name: Build with Maven
+        run: |
+          mvn -f /home/runner/work/TTE-app/TTE-app/tte-app/pom.xml clean package
+
+      - name: Run tests with JaCoCo coverage
+        run: mvn -f tte-app/pom.xml test jacoco:report
+
+      - name: Upload code coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: jacoco-report
+          path: tte-app/target/site/jacoco
+      - name: Build Docker image
+        run: docker build -t tech-trend-emporium-app:${{ github.sha }} -f Dockerfile .
+        working-directory: /home/runner/work/TTE-app/TTE-app/tte-app
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Tag Docker image
+        run: |
+          docker tag tech-trend-emporium-app:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.sha }}
+      - name: Push Docker image to Amazon ECR
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.sha }}
+      - name: Deploy docker image to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "Connected to EC2 instance"
+
+            # Stop and remove existing container (if any)
+            sudo docker stop tteapp || true
+            sudo docker rm tteapp || true
+
+            # Pull the latest image from ECR
+            sudo docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.sha }}
+            
+            # Set environment variables (using secrets)
+            export DB_URL="${{ secrets.DB_URL }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+            export DB_PORT="${{ secrets.DB_PORT }}"
+            export SECRET_KEY="${{ secrets.SECRET_KEY }}"
+            export PATH_STORE="${{ secrets.PATH_STORE }}"
+            
+            # Deploy Docker image (with all environment variables)
+            sudo docker run -d -p 8080:8080 --name tteapp \
+            -e DB_URL=$DB_URL \
+            -e DB_PASSWORD=$DB_PASSWORD \
+            -e DB_USERNAME=$DB_USERNAME \
+            -e DB_PORT=$DB_PORT \
+            -e SECRET_KEY=$SECRET_KEY \
+            -e PATH_STORE=$PATH_STORE \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.sha }}
+            
+            sudo docker ps
+                        
+            # Exit script successfully
+            exit 0
