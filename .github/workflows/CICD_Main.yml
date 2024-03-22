@@ -104,8 +104,6 @@ jobs:
             ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.sha }}
             
             sudo docker ps
-            
-            sudo docker logs -f tteapp
-            
+                        
             # Exit script successfully
             exit 0
