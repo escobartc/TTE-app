@@ -1,12 +1,16 @@
 package com.challenge.tteapp;
 
+import com.challenge.tteapp.configuration.UserRoleContext;
 import com.challenge.tteapp.controller.UserController;
 import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.dto.ShopperDTO;
+import com.challenge.tteapp.model.dto.WishListDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
+import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.repository.UserRepository;
+import com.challenge.tteapp.repository.WishListRepository;
 import com.challenge.tteapp.service.UserService;
 import com.challenge.tteapp.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -18,8 +22,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.HttpClientErrorException;
 
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -36,6 +44,10 @@ class UserControllerTest {
     private UserServiceImpl userServiceimpl;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private WishListRepository wishListRepository;
+    @Mock
+    private ProductRepository productRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
@@ -120,6 +132,126 @@ class UserControllerTest {
         existingUser.setState(0);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
         ResponseEntity<Object> response2 = userServiceimpl.loginUser(logInOutUser, "requestId");
+        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+
+    }
+
+    @Test
+    void retrieverList() {
+        WishListResponse wishListResponse = new WishListResponse();
+        wishListResponse.setUser_id("id");
+
+        ResponseEntity<Object> successResponse = new ResponseEntity<>(wishListResponse, HttpStatus.CREATED);
+        lenient().when(userService.retrieverList(eq(wishListResponse.getUser_id()), anyString())).thenReturn(successResponse);
+        ResponseEntity<Object> response = userController.retrieverList();
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findElement(anyString())).thenReturn(user);
+
+        List<Integer> values = new ArrayList<>();
+        values.add(1);
+        values.add(2);
+        values.add(3);
+        lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values);
+
+        ResponseEntity<Object> response2 = userServiceimpl.retrieverList("email", "requestId");
+        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+    }
+
+    @Test
+    void retrieverListError() {
+        WishListResponse wishListResponse = new WishListResponse();
+        wishListResponse.setUser_id("id");
+
+        ResponseEntity<Object> successResponse = new ResponseEntity<>(wishListResponse, HttpStatus.CREATED);
+        lenient().when(userService.retrieverList(eq(wishListResponse.getUser_id()), anyString())).thenReturn(successResponse);
+        ResponseEntity<Object> response = userController.retrieverList();
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findElement(anyString())).thenReturn(user);
+        lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(new ArrayList<>());
+
+        assertThrows(HttpClientErrorException.class, () -> {
+            userServiceimpl.removeListElement("email", "1", "requestId");
+        });
+    }
+    @Test
+    void addElementListTest() {
+        WishListDTO wishListDTO = new WishListDTO();
+        wishListDTO.setUser_id("12");
+        WishListResponse wishListResponse = new WishListResponse();
+        wishListResponse.setUser_id("id");
+
+        ResponseEntity<Object> successResponse = new ResponseEntity<>(wishListResponse, HttpStatus.CREATED);
+        lenient().when(userService.addElementList(eq(wishListDTO), anyString() ,anyString() ,anyString())).thenReturn(successResponse);
+        ResponseEntity<Object> response = userController.AddElementList("idProduct",wishListDTO);
+
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findElement(anyString())).thenReturn(user);
+
+        List<Integer> values = new ArrayList<>();
+        values.add(1);
+        values.add(2);
+        values.add(3);
+
+        List<Integer> values2 = new ArrayList<>();
+        values.add(1);
+        values.add(2);
+        lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values2);
+        when(productRepository.findProductById()).thenReturn(values);
+        ResponseEntity<Object> response2 = userServiceimpl.addElementList(wishListDTO,"3","email" ,"requestId");
+        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+    }
+
+    @Test
+    void addElementListTesError() {
+        WishListDTO wishListDTO = new WishListDTO();
+        wishListDTO.setUser_id("12");
+        WishListResponse wishListResponse = new WishListResponse();
+        wishListResponse.setUser_id("id");
+
+        ResponseEntity<Object> successResponse = new ResponseEntity<>(wishListResponse, HttpStatus.CREATED);
+        lenient().when(userService.addElementList(eq(wishListDTO), anyString() ,anyString() ,anyString())).thenReturn(successResponse);
+        ResponseEntity<Object> response = userController.AddElementList("idProduct",wishListDTO);
+
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findElement(anyString())).thenReturn(user);
+
+        List<Integer> values = new ArrayList<>();
+        values.add(1);
+        values.add(2);
+        values.add(3);
+
+        List<Integer> values2 = new ArrayList<>();
+        values.add(1);
+        values.add(2);
+        lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values2);
+        when(productRepository.findProductById()).thenReturn(values);
+        ResponseEntity<Object> response2 = userServiceimpl.addElementList(wishListDTO,"3","email" ,"requestId");
+        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+    }
+
+    @Test
+    void removeListElementTest() {
+        WishListResponse wishListResponse = new WishListResponse();
+        wishListResponse.setUser_id("id");
+
+        ResponseEntity<Object> successResponse = new ResponseEntity<>(wishListResponse, HttpStatus.CREATED);
+        lenient().when(userService.removeListElement(eq("idProduct"), eq("email"), anyString())).thenReturn(successResponse);
+        ResponseEntity<Object> response = userController.removeListElement("idProduct");
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findElement(anyString())).thenReturn(user);
+
+        List<Integer> values = new ArrayList<>();
+        values.add(1);
+        values.add(2);
+        values.add(3);
+        lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values);
+
+        ResponseEntity<Object> response2 = userServiceimpl.removeListElement("email", "1", "requestId");
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
 
     }

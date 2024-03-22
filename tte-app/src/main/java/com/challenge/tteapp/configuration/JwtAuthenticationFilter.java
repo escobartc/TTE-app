@@ -56,6 +56,7 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
             if (jwtService.isTokenValid(token, userDetails)) {
                 if (isAuthorized(role,endpoint)) {
                     UserRoleContext.setRole(role);
+                    UserRoleContext.setName(email);
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -74,15 +75,9 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
         UserRoleContext.clear();
     }catch (ExpiredJwtException e){
-            String consult = jwtService.getUsernameFromToken(token);
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write("{\"error\": \"Token expired\"}");
-            User user = userRepository.findElement(consult);
-            if(user!=null){
-                user.setState(0);
-                userRepository.save(user);
-            }
         }
     }
 
@@ -95,6 +90,8 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
             return role.equals(CUSTOMER);
         } else if (endpoint.startsWith("/api/category")) {
             return role.equals(ADMIN) || role.equals(EMPLOYEE);
+        }else if (endpoint.startsWith("/api/user/wishlist") || endpoint.startsWith("api/user/wishlist/add")) {
+            return role.equals(CUSTOMER);
         } else {
             return false;
         }
