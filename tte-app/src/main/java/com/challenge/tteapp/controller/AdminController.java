@@ -1,11 +1,15 @@
 package com.challenge.tteapp.controller;
 
+import com.challenge.tteapp.configuration.UserRoleContext;
+import com.challenge.tteapp.model.CouponDelete;
 import com.challenge.tteapp.model.UsersList;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.dto.CouponDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
 import com.challenge.tteapp.model.UsersDTO;
 import com.challenge.tteapp.service.AdminService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -60,6 +64,24 @@ public class AdminController {
         log.info("JOIN TO TTE-APP, delete user by admin, with requestId: {}", requestId);
         return adminService.deleteUser(users, requestId);
     }
-
+    @PostMapping(path= "/coupon", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Object> createCoupon(@RequestBody @Valid CouponDTO couponDTO) {
+        String requestId = UUID.randomUUID().toString();
+        String email = UserRoleContext.getName();
+        log.info("JOIN TO TTE-APP, creation coupon by admin, with requestId: [{}]", requestId);
+        return adminService.createCoupon(couponDTO,email, requestId);
+    }
+    @GetMapping(path= "/coupon")
+    public ResponseEntity<Object> viewAllCoupon() {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, creation user by admin, with requestId: [{}]", requestId);
+        return adminService.viewAllCoupon(requestId);
+    }
+    @DeleteMapping(path= "/coupon", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Object> deleteCoupon(@RequestBody CouponDelete couponDelete) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, creation user by admin, with requestId: [{}]", requestId);
+        return adminService.deleteCoupon(couponDelete, requestId);
+    }
 
 }

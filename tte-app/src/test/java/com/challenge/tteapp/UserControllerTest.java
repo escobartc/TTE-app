@@ -184,7 +184,7 @@ class UserControllerTest {
 
         ResponseEntity<Object> successResponse = new ResponseEntity<>(wishListResponse, HttpStatus.CREATED);
         lenient().when(userService.addElementList(eq(wishListDTO), anyString() ,anyString() ,anyString())).thenReturn(successResponse);
-        ResponseEntity<Object> response = userController.AddElementList("idProduct",wishListDTO);
+        ResponseEntity<Object> response = userController.addElementList("idProduct",wishListDTO);
 
         User user = new User();
         user.setId(1L);
@@ -213,7 +213,7 @@ class UserControllerTest {
 
         ResponseEntity<Object> successResponse = new ResponseEntity<>(wishListResponse, HttpStatus.CREATED);
         lenient().when(userService.addElementList(eq(wishListDTO), anyString() ,anyString() ,anyString())).thenReturn(successResponse);
-        ResponseEntity<Object> response = userController.AddElementList("idProduct",wishListDTO);
+        ResponseEntity<Object> response = userController.addElementList("idProduct",wishListDTO);
 
         User user = new User();
         user.setId(1L);

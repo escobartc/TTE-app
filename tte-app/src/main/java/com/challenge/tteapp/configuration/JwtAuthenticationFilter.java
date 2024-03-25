@@ -42,7 +42,6 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         final String email;
         final String role;
         final String endpoint;
-
         try {
         if (token == null) {
             filterChain.doFilter(request, response);
@@ -82,7 +81,7 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     }
 
     private boolean isAuthorized(String role, String endpoint) {
-        if (endpoint.equals("/api/admin/auth") || endpoint.equals("/api/user")) {
+        if (endpoint.equals("/api/admin/auth") || endpoint.equals("/api/user") || endpoint.equals("/api/coupon")) {
             return role.equals(ADMIN);
         } else if (endpoint.startsWith("/api/product")) {
             return role.equals(ADMIN) || role.equals(EMPLOYEE);
@@ -90,9 +89,10 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
             return role.equals(CUSTOMER);
         } else if (endpoint.startsWith("/api/category")) {
             return role.equals(ADMIN) || role.equals(EMPLOYEE);
-        }else if (endpoint.startsWith("/api/user/wishlist") || endpoint.startsWith("api/user/wishlist/add")) {
+        }else if (endpoint.startsWith("/api/user/wishlist") || endpoint.startsWith("api/user/wishlist/add")
+                || endpoint.startsWith("/api/cart") || endpoint.startsWith("/api/cart/add") || endpoint.startsWith("/cart/checkout") ){
             return role.equals(CUSTOMER);
-        } else {
+        }else {
             return false;
         }
     }

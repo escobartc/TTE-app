@@ -3,12 +3,15 @@ package com.challenge.tteapp.service.impl;
 import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.dto.CouponDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
+import com.challenge.tteapp.repository.CouponRepository;
 import com.challenge.tteapp.repository.UserRepository;
 import com.challenge.tteapp.repository.ProductRepository;
+import com.challenge.tteapp.repository.WishListRepository;
 import com.challenge.tteapp.service.AdminService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
@@ -36,6 +40,8 @@ public class AdminServiceImpl implements AdminService {
 
     final UserRepository userRepository;
     final ProductRepository productRepository;
+    final CouponRepository couponRepository;
+    final WishListRepository wishListRepository;
     final ValidationError validationError;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -75,7 +81,8 @@ public class AdminServiceImpl implements AdminService {
             token.setToken(jwtService.getToken(user));
             return new ResponseEntity<>(token, HttpStatus.CREATED);
         } catch (AuthenticationException e) {
-            throw new AuthenticationException("Incorrect email or password") {};
+            throw new AuthenticationException("Incorrect email or password") {
+            };
         }
     }
 
@@ -110,6 +117,10 @@ public class AdminServiceImpl implements AdminService {
         for (String username : users.getUsers()) {
             User user = userRepository.findElement(username);
             if (user != null) {
+                List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
+                if (!wishList.isEmpty()) {
+                    wishListRepository.deleteById(user.getId());
+                }
                 userRepository.delete(user);
                 deletedUsernames.add(username);
             }
@@ -118,6 +129,39 @@ public class AdminServiceImpl implements AdminService {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of(MESSAGE, "Users deleted successfully " + deletedUsernames));
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("Message", "No users found for deletion."));
+        }
+    }
+
+    @Override
+    public ResponseEntity<Object> createCoupon(@RequestBody CouponDTO couponDTO, String email, String requestId) {
+        log.info("creation coupon, requestId: [{}]", requestId);
+        Coupon coupon = new Coupon();
+        BeanUtils.copyProperties(couponDTO, coupon);
+        List<String> coupons = couponRepository.findNameCoupon();
+        if (!coupons.contains(couponDTO.getCoupon_code())) {
+            couponRepository.save(coupon);
+            return new ResponseEntity<>(new StatusResponse("created successful"), HttpStatus.CREATED);
+
+        } else {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The coupon exist in database");
+        }
+    }
+
+    @Override
+    public ResponseEntity<Object> viewAllCoupon(String requestId) {
+        log.info("view All coupon, requestId: [{}]", requestId);
+        return new ResponseEntity<>(couponRepository.findAll(), HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<Object> deleteCoupon(CouponDelete couponDelete, String requestId) {
+        log.info("delete coupon, requestId: [{}]", requestId);
+        Coupon coupon = couponRepository.findCoupon(couponDelete.getName());
+        if (coupon != null) {
+            couponRepository.deleteById(coupon.getId());
+            return new ResponseEntity<>(new StatusResponse("delete successful"), HttpStatus.CREATED);
+        } else {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "coupon dont exist, please verify your information");
         }
     }
 

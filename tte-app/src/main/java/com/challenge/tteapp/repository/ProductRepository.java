@@ -14,4 +14,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Integer> findArticleIdsByUserId(@Param("userId") Long userId);
     @Query("SELECT id FROM Product")
     List<Integer> findProductById();
+    @Query(value = "SELECT i.available  from product p join inventory i on p.id = i.id where p.id =:userId",nativeQuery = true)
+     Integer availableProducts(@Param("userId") Long userId);
 }

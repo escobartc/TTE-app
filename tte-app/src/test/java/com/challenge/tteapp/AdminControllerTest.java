@@ -12,6 +12,7 @@ import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.repository.UserRepository;
+import com.challenge.tteapp.repository.WishListRepository;
 import com.challenge.tteapp.service.AdminService;
 import com.challenge.tteapp.service.ProductService;
 import com.challenge.tteapp.service.impl.AdminServiceImpl;
@@ -43,6 +44,9 @@ class AdminControllerTest {
     private AdminService adminService;
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private WishListRepository wishListRepository;
     @InjectMocks
     private AdminController adminController;
     @Mock
@@ -172,6 +176,10 @@ class AdminControllerTest {
 
 
         when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(new User());
+        List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(2);
+        lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(list);
         ResponseEntity<Object> response2 = adminServiceImpl.deleteUser(userResponse, "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
 
