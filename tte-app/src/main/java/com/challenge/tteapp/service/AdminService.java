@@ -20,7 +20,4 @@ public interface AdminService {
     ResponseEntity<List<Coupon>> viewAllCoupon(String requestId);
     ResponseEntity<StatusResponse> deleteCoupon(CouponDelete couponDelete, String requestId);
 
-
-
-
 }

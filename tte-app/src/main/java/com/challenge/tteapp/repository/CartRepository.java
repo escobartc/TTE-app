@@ -22,7 +22,7 @@ public interface CartRepository extends JpaRepository<Cart,Long> {
     List<Object[]> findProductsCartById(@Param("userId") Long userId);
     @Transactional
     @Modifying
-    @Query(value = "INSERT INTO cart (user_id, product_cart, quantity) VALUES (:userId, :articleId, :quantity)", nativeQuery = true)
+    @Query(value = "INSERT INTO cart (user_id, product_cart, quantity, order_status) VALUES (:userId, :articleId, :quantity)", nativeQuery = true)
     void addElementToList(@Param("userId") Long userId, @Param("articleId") Integer productId,@Param("quantity") Integer quantity);
     @Transactional
     @Modifying
@@ -35,6 +35,6 @@ public interface CartRepository extends JpaRepository<Cart,Long> {
     void removeCouponFromCart(@Param("userId") Long userId);
     @Transactional
     @Modifying
-    @Query(value = "UPDATE cart SET cart.coupon_id = :CouponId WHERE cart.user_id  = :userId",nativeQuery = true)
-    void updateCartCoupon(@Param("CouponId") Long CouponId, @Param("userId") Long userId);
+    @Query(value = "UPDATE cart SET cart.coupon_id = :CouponId, cart.order_status =:orderStatus WHERE cart.user_id  = :userId",nativeQuery = true)
+    void updateCartCoupon(@Param("CouponId") Long CouponId, @Param("userId") Long userId, @Param("orderStatus") String orderStatus);
 }

@@ -242,7 +242,7 @@ public class UserServiceImpl implements UserService {
                         " please verify your information");
             } else {
                 couponRepository.updateCouponState(coupon.getId(),  Boolean.TRUE);
-                cartRepository.updateCartCoupon(coupon.getId(),user.getId());
+                cartRepository.updateCartCoupon(coupon.getId(),user.getId(),"CREATED");
                 log.info("Coupon successfully added: {} , requestId: [{}]", requestId, email);
             }
         }

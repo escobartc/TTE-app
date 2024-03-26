@@ -1,6 +1,5 @@
 package com.challenge.tteapp.configuration;
 
-import com.challenge.tteapp.model.User;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.repository.UserRepository;
