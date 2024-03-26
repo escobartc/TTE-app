@@ -228,7 +228,6 @@ public class UserServiceImpl implements UserService {
         Coupon coupon = null;
         if (couponCode.getCouponCode().isEmpty()) {
             List<Long> cartCouponIds = cartRepository.allCart(user.getId());
-            System.out.println("is:"+cartCouponIds.get(0));
             if (!cartCouponIds.isEmpty()) {
                 couponRepository.updateCouponState(cartCouponIds.get(0),  Boolean.FALSE);
                 cartRepository.removeCouponFromCart(user.getId());
