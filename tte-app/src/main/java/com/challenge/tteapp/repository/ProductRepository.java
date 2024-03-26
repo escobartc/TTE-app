@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -14,6 +15,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Integer> findArticleIdsByUserId(@Param("userId") Long userId);
     @Query("SELECT id FROM Product")
     List<Integer> findProductById();
+
+    @Query(value = "SELECT p.price FROM product p WHERE p.id = :productId", nativeQuery = true)
+    Double findProductPriceById(@Param("productId") Long productId);
     @Query(value = "SELECT i.available  from product p join inventory i on p.id = i.id where p.id =:userId",nativeQuery = true)
      Integer availableProducts(@Param("userId") Long userId);
 }

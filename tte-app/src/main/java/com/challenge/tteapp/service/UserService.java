@@ -6,6 +6,8 @@ import com.challenge.tteapp.model.dto.ShopperDTO;
 import com.challenge.tteapp.model.dto.WishListDTO;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 public interface UserService {
 
     ResponseEntity<LoginResponse> loginUser(LogInOutUser logInOutUser, String requestId);
@@ -14,10 +16,9 @@ public interface UserService {
     ResponseEntity<WishListResponse> retrieverList(String email,String requestId);
     ResponseEntity<StatusResponse> removeListElement(String email,String idProduct,String requestId);
     ResponseEntity<StatusResponse> addElementList(WishListDTO wishListDTO, String idProduct, String email,String requestId);
-    ResponseEntity<Object> cartList(CartDTO cartDTO, String email, String requestId);
-    ResponseEntity<Object> retrieverCart(String email,String requestId);
-    ResponseEntity<Object> retrieverCartCheckout(String email,String requestId);
-    ResponseEntity<Object> addCoupon(CouponCode couponCode, String email, String requestId);
+    ResponseEntity<MessageResponse> cartList(CartDTO cartDTO, String email, String requestId);
+    ResponseEntity<CartResponse> retrieverCart(String email, String requestId);
+    ResponseEntity<CartBeforeCheck> addCoupon(CouponCode couponCode, String email, String requestId);
 
 
 

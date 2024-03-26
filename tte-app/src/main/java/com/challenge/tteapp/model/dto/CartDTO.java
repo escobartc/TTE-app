@@ -1,5 +1,8 @@
 package com.challenge.tteapp.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,7 +11,8 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 public class CartDTO {
-    private String id;
-    private Integer product_id;
+    @JsonProperty("product_id")
+    private Integer productId;
+    @Min(value = 1)
     private Integer quantity;
 }

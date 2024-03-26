@@ -14,5 +14,10 @@ public class Cart {
     private Long user;
 
     @Column(name = "product_cart")
-    private int cartProduct;
+    private Integer cartProduct;
+
+    private Integer quantity;
+
+    @Column(name = "coupon_id")
+    private String couponId;
 }

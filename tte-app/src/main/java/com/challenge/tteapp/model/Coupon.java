@@ -15,5 +15,7 @@ public class Coupon {
     private String couponCode;
     @Column(name = "percentage")
     private Integer discountPercentage;
+    @Column(name = "use_coupon")
+    private Boolean useCoupon;
 
 }

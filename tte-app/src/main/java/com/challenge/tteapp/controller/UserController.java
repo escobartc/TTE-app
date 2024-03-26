@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -69,7 +70,7 @@ public class UserController {
     }
 
     @PostMapping(path = "/cart/add", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Object> cartList(@RequestBody CartDTO cartDTO) {
+    public ResponseEntity<MessageResponse> cartList(@RequestBody @Valid CartDTO cartDTO) {
         String email = UserRoleContext.getName();
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, cart user: {}, with requestId: [{}]", email, requestId);
@@ -77,7 +78,7 @@ public class UserController {
     }
 
     @GetMapping(path = "/cart")
-    public ResponseEntity<Object> retrieverCart() {
+    public ResponseEntity<CartResponse> retrieverCart() {
         String email = UserRoleContext.getName();
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, cart retriever: {}, with requestId: [{}]", email, requestId);
@@ -85,19 +86,11 @@ public class UserController {
     }
 
     @PostMapping(path = "/cart", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Object> addCoupon(@RequestBody CouponCode couponCode) {
+    public ResponseEntity<CartBeforeCheck> addCoupon(@RequestBody CouponCode couponCode) {
         String email = UserRoleContext.getName();
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, cart user: {}, with requestId: [{}]", email, requestId);
         return userService.addCoupon(couponCode, email, requestId);
-    }
-
-    @GetMapping(path = "/cart/checkout")
-    public ResponseEntity<Object> retrieverCartCheckout() {
-        String email = UserRoleContext.getName();
-        String requestId = UUID.randomUUID().toString();
-        log.info("JOIN TO TTE-APP, cart retriever checkout: {}, with requestId: [{}]", email, requestId);
-        return userService.retrieverCartCheckout(email, requestId);
     }
 
 }

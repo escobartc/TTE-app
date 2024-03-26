@@ -134,6 +134,7 @@ public class AdminServiceImpl implements AdminService {
         log.info("creation coupon, requestId: [{}]", requestId);
         Coupon coupon = new Coupon();
         BeanUtils.copyProperties(couponDTO, coupon);
+        coupon.setUseCoupon(Boolean.FALSE);
         List<String> coupons = couponRepository.findNameCoupon();
         if (!coupons.contains(couponDTO.getCouponCode())) {
             couponRepository.save(coupon);

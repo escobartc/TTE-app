@@ -9,6 +9,7 @@ import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.repository.*;
 import com.challenge.tteapp.service.UserService;
+import io.swagger.models.auth.In;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
+import javax.swing.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +44,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final CouponRepository couponRepository;
+
     @Override
     public ResponseEntity<LoginResponse> loginUser(LogInOutUser logInOutUser, String requestId) {
         log.info("Login user, requestId: [{}]", requestId);
@@ -62,7 +66,8 @@ public class UserServiceImpl implements UserService {
             loginResponse.setToken(jwtService.getToken(userAuth));
             return new ResponseEntity<>(loginResponse, HttpStatus.CREATED);
         } catch (AuthenticationException e) {
-            throw new AuthenticationException("Incorrect email or password") {};
+            throw new AuthenticationException("Incorrect email or password") {
+            };
         }
     }
 
@@ -133,12 +138,12 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<StatusResponse> addElementList(WishListDTO wishListDTO, String idProduct, String email, String requestId) {
         log.info("Add product in wishlist, requestId: [{}]", requestId);
         User user;
-        if(wishListDTO.getUser_id().isEmpty()) {
-             user = userRepository.findElement(email);
-        }else {
-             user = userRepository.findElement(wishListDTO.getUser_id());
+        if (wishListDTO.getUser_id().isEmpty()) {
+            user = userRepository.findElement(email);
+        } else {
+            user = userRepository.findElement(wishListDTO.getUser_id());
         }
-        if(user==null) throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "User don't exist");
+        if (user == null) throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "User don't exist");
         List<Integer> idProducts = productRepository.findProductById();
         if (idProducts.contains(Integer.parseInt(idProduct))) {
             List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
@@ -154,6 +159,7 @@ public class UserServiceImpl implements UserService {
         log.warn("The product does not exist, requestId: [{}]", requestId);
         throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The product does not exist");
     }
+
     @Override
     public ResponseEntity<StatusResponse> removeListElement(String email, String idProduct, String requestId) {
         log.info("Remove product in wishlist , requestId: [{}]", requestId);
@@ -170,40 +176,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<Object> cartList(CartDTO cartDTO, String email, String requestId) {
+    public ResponseEntity<MessageResponse> cartList(CartDTO cartDTO, String email, String requestId) {
         log.info("Add product in cart, requestId: [{}]", requestId);
         User user = userRepository.findElement(email);
-
-        List<Integer> idProducts = productRepository.findProductById();
-        List<Integer> carList = cartRepository.findArticleIdsByUserId(user.getId());
-
-        Integer productId = cartDTO.getProduct_id();
-        if (carList.contains(productId)) {
-            log.warn("Product already exists in the cart: [{}]", productId);
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The product is already in the cart");
-        }
-
+        List<Integer> cartList = cartRepository.findArticleIdsByUserId(user.getId());
+        Integer productId = cartDTO.getProductId();
         Integer quantity = productRepository.availableProducts(Long.valueOf(productId));
+
+        if (cartList.contains(productId) && quantity >= cartDTO.getQuantity()) {
+            cartRepository.updateCartQuantity(cartDTO.getQuantity(), user.getId());
+            return new ResponseEntity<>(new MessageResponse("Product quantity update successfully"), HttpStatus.OK);
+        }
         if (cartDTO.getQuantity() > quantity) {
             log.warn("Not enough quantity available for product: [{}]", productId);
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Not enough quantity available for product");
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Not enough quantity available for product" +
+                    ", available: " + quantity);
         }
-
-        if (quantity > 0 && cartDTO.getQuantity() > 0) {
-            cartRepository.addElementToList(user.getId(), productId, cartDTO.getQuantity());
-            log.info("Product added successfully, requestId: [{}]", requestId);
-            return ResponseEntity.status(HttpStatus.OK).body(Map.of(MESSAGE, "Product added successfully"));
-        } else {
-            log.warn("Not possible to add to cart: [{}]", productId);
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Not possible to add to cart");
-        }
+        cartRepository.addElementToList(user.getId(), productId, cartDTO.getQuantity());
+        log.info("Product added successfully, requestId: [{}]", requestId);
+        return new ResponseEntity<>(new MessageResponse("Product added successfully"), HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<Object> retrieverCart(String email, String requestId) {
+    public ResponseEntity<CartResponse> retrieverCart(String email, String requestId) {
         log.info("Search user in database , requestId: [{}]", requestId);
         User user = userRepository.findElement(email);
-        List<Products> productsList = constructionListProducts(user);
+        List<Products> productsList = buildProducts(user);
         CartResponse cartResponse = new CartResponse();
         cartResponse.setUser_id(user.getId().toString());
         cartResponse.setProducts(productsList);
@@ -211,55 +209,82 @@ public class UserServiceImpl implements UserService {
         return new ResponseEntity<>(cartResponse, HttpStatus.OK);
     }
 
-    @Override
-    public ResponseEntity<Object> retrieverCartCheckout(String email, String requestId) {
-        User user = userRepository.findElement(email);
-        List<Long> cartResponse = cartRepository.AllCart(user.getId());
-        Optional<Coupon> list = Optional.empty();
-
-        if(!cartResponse.isEmpty()){
-            list = couponRepository.findById(cartResponse.get(0));
-        }
-
-        CartBeforeCheck cartBeforeCheck = new CartBeforeCheck();
-        cartBeforeCheck.setUser_id(user.getId().toString());
-        List<Products> productsList = constructionListProducts(user);
-        cartBeforeCheck.setShopping_cart(productsList);
-
-        CouponDTO couponApplied = new CouponDTO();
-        couponApplied.setDiscountPercentage(list.get().getDiscountPercentage());
-        couponApplied.setCouponCode(list.get().getCouponCode());
-        cartBeforeCheck.setCoupon_applied(couponApplied);
-
-
-        log.info("Retriever cart list successful, requestId: [{}]", requestId);
-        return new ResponseEntity<>(cartBeforeCheck, HttpStatus.OK);    }
-
-    private List<Products> constructionListProducts(User user) {
-        List<Object[]> productsData = cartRepository.findProductsCartById(user.getId());
+    private List<Products> buildProducts(User user) {
+        List<Object[]> cart = cartRepository.findProductsCartById(user.getId());
         List<Products> productsList = new ArrayList<>();
-        for (Object[] row : productsData) {
-            Products product = new Products();
-            product.setProduct_cart((int) row[0]);
-            product.setQuantity((String) row[1]);
-            productsList.add(product);
+        for (Object[] element : cart) {
+            Products products = new Products();
+            products.setProductCart((Long) element[0]);
+            products.setQuantity((Long) element[1]);
+            productsList.add(products);
         }
         return productsList;
     }
 
     @Override
-    public ResponseEntity<Object> addCoupon(CouponCode couponCode, String email, String requestId) {
-        log.info("add coupon in cart: {} , requestId: [{}]", requestId,email);
+    public ResponseEntity<CartBeforeCheck> addCoupon(CouponCode couponCode, String email, String requestId) {
+        log.info("Add coupon to cart: {} , requestId: [{}]", requestId, email);
         User user = userRepository.findElement(email);
-        Coupon coupon = couponRepository.findCoupon(couponCode.getCoupon_code());
-
-        if(coupon == null){
-            log.warn("coupon dont exist, please verify your information, requestId: [{}]", requestId);
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "coupon dont exist, please verify your information");
-        }else{
-            cartRepository.updateCartCoupon(coupon.getId(),user.getId());
-            log.info("Coupon successful added: {} , requestId: [{}]", requestId,email);
-            return new ResponseEntity<>(new StatusResponse("Coupon successful added"), HttpStatus.CREATED);
+        Coupon coupon = null;
+        if (couponCode.getCouponCode().isEmpty()) {
+            List<Long> cartCouponIds = cartRepository.allCart(user.getId());
+            System.out.println("is:"+cartCouponIds.get(0));
+            if (!cartCouponIds.isEmpty()) {
+                couponRepository.updateCouponState(cartCouponIds.get(0),  Boolean.FALSE);
+                cartRepository.removeCouponFromCart(user.getId());
+                log.info("Coupon successfully removed: {} , requestId: [{}]", requestId, email);
+            }
+        } else {
+            coupon = couponRepository.findCoupon(couponCode.getCouponCode());
+            if (coupon == null || coupon.getUseCoupon().equals(true)) {
+                log.warn("Coupon does not exist or was used, please verify your information: {} , requestId: [{}]"
+                        , requestId, email);
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Coupon does not exist or was used," +
+                        " please verify your information");
+            } else {
+                couponRepository.updateCouponState(coupon.getId(),  Boolean.TRUE);
+                cartRepository.updateCartCoupon(coupon.getId(),user.getId());
+                log.info("Coupon successfully added: {} , requestId: [{}]", requestId, email);
+            }
         }
+        CartBeforeCheck cartBeforeCheck = buildResponseCheckout(user, Optional.ofNullable(coupon));
+        return new ResponseEntity<>(cartBeforeCheck, HttpStatus.CREATED);
     }
+
+    private CartBeforeCheck buildResponseCheckout(User user, Optional<Coupon> coupon) {
+        CartBeforeCheck cartBeforeCheck = new CartBeforeCheck();
+        cartBeforeCheck.setUserId(user.getId().toString());
+
+        List<Products> productsList = buildProducts(user);
+        cartBeforeCheck.setShoppingCart(productsList);
+
+        double totalBeforeDiscount = 0.0;
+
+        for (Products product : productsList) {
+            Double price = productRepository.findProductPriceById(product.getProductCart());
+            if (price != null) {
+                totalBeforeDiscount += price * product.getQuantity();
+            }
+        }
+        double totalAfterDiscount = totalBeforeDiscount;
+        if (coupon.isPresent()) {
+            double discountPercentage = coupon.get().getDiscountPercentage() / 100.0;
+            totalAfterDiscount *= (1 - discountPercentage);
+        }
+
+        double finalTotal = totalAfterDiscount + 19.99;
+
+        cartBeforeCheck.setTotalBeforeDiscount(totalBeforeDiscount);
+        cartBeforeCheck.setTotalAfterDiscount(totalAfterDiscount);
+        cartBeforeCheck.setShippingCost(19.99);
+        cartBeforeCheck.setFinalTotal(finalTotal);
+
+        CouponDTO couponApplied = new CouponDTO();
+        couponApplied.setDiscountPercentage(coupon.map(Coupon::getDiscountPercentage).orElse(0));
+        couponApplied.setCouponCode(coupon.map(Coupon::getCouponCode).orElse(null));
+        cartBeforeCheck.setCouponApplied(couponApplied);
+
+        return cartBeforeCheck;
+    }
+
 }
