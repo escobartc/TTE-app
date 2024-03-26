@@ -10,10 +10,10 @@ import java.util.List;
 @Repository
 public interface CouponRepository extends JpaRepository<Coupon,Long> {
 
-    @Query("SELECT coupon_code FROM Coupon")
+    @Query("SELECT couponCode FROM Coupon")
     List<String> findNameCoupon();
 
-    @Query("SELECT c FROM Coupon c WHERE c.coupon_code = :parameter")
+    @Query("SELECT c FROM Coupon c WHERE c.couponCode = :parameter")
     Coupon findCoupon(@Param("parameter") String parameter);
 
 }

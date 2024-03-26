@@ -52,7 +52,7 @@ public class ControllerExceptionHandler {
         });
         String errorMessage = errors.get(0);
         int statusCode = HttpStatus.BAD_REQUEST.value();
-        log.error(errorMessage);
+        log.error(errorMessage,HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(validationError.getStructureError(errorMessage, String.valueOf(statusCode)));
     }

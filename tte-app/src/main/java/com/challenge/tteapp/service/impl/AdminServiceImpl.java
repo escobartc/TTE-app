@@ -38,31 +38,26 @@ import static com.challenge.tteapp.model.Constants.MESSAGE;
 @Slf4j
 public class AdminServiceImpl implements AdminService {
 
-    final UserRepository userRepository;
-    final ProductRepository productRepository;
-    final CouponRepository couponRepository;
-    final WishListRepository wishListRepository;
-    final ValidationError validationError;
+    private final UserRepository userRepository;
+    private final CouponRepository couponRepository;
+    private final WishListRepository wishListRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final ValidationResponse validationResponse;
 
-
-    public ResponseEntity<Object> register(UserDTO userDTO, String requestId) {
+    @Override
+    public ResponseEntity<UserResponse> register(UserDTO userDTO, String requestId) {
+        log.info("creation user by admin, with requestId: [{}]", requestId);
         if (!userDTO.getRole().equalsIgnoreCase("employee")) {
+            log.error("Role must be 'employee' for user registration, with requestId: [{}]", requestId);
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Role must be 'employee' for user registration");
         }
-        User user = new User();
-        user.setRole("EMPLOYEE");
-        user.setUsername(userDTO.getUsername());
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        user.setState(0);
+        User user = buildUser(userDTO);
         return validationInfo(user, requestId);
     }
-
-    public ResponseEntity<Object> registerAdmin(Admin admin, String requestId) {
+    @Override
+    public ResponseEntity<UserResponse> registerAdmin(Admin admin, String requestId) {
         User user = new User();
         admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         BeanUtils.copyProperties(admin, user);
@@ -70,8 +65,8 @@ public class AdminServiceImpl implements AdminService {
         user.setState(0);
         return validationInfo(user, requestId);
     }
-
-    public ResponseEntity<Object> loginAdmin(LoginAdmin admin, String requestId) {
+    @Override
+    public ResponseEntity<TokenRequest> loginAdmin(LoginAdmin admin, String requestId) {
         try {
             log.info("Login Admin , requestId: [{}]", requestId);
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getEmail(), admin.getPassword()));
@@ -79,8 +74,10 @@ public class AdminServiceImpl implements AdminService {
                     .orElseThrow(() -> new NoSuchElementException("User not found with email: " + admin.getEmail()));
             TokenRequest token = new TokenRequest();
             token.setToken(jwtService.getToken(user));
+            log.info("Token created: {} , requestId: [{}]", token.getToken(), requestId);
             return new ResponseEntity<>(token, HttpStatus.CREATED);
         } catch (AuthenticationException e) {
+            log.error("Incorrect email or password , requestId: [{}]", requestId);
             throw new AuthenticationException("Incorrect email or password") {
             };
         }
@@ -133,40 +130,43 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<Object> createCoupon(@RequestBody CouponDTO couponDTO, String email, String requestId) {
+    public ResponseEntity<StatusResponse> createCoupon(@RequestBody CouponDTO couponDTO, String email, String requestId) {
         log.info("creation coupon, requestId: [{}]", requestId);
         Coupon coupon = new Coupon();
         BeanUtils.copyProperties(couponDTO, coupon);
         List<String> coupons = couponRepository.findNameCoupon();
-        if (!coupons.contains(couponDTO.getCoupon_code())) {
+        if (!coupons.contains(couponDTO.getCouponCode())) {
             couponRepository.save(coupon);
+            log.info("created successful, requestId: [{}]", requestId);
             return new ResponseEntity<>(new StatusResponse("created successful"), HttpStatus.CREATED);
 
         } else {
+            log.error("The coupon exist in database, requestId: [{}]", requestId);
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The coupon exist in database");
         }
     }
 
     @Override
-    public ResponseEntity<Object> viewAllCoupon(String requestId) {
+    public ResponseEntity<List<Coupon>> viewAllCoupon(String requestId) {
         log.info("view All coupon, requestId: [{}]", requestId);
         return new ResponseEntity<>(couponRepository.findAll(), HttpStatus.CREATED);
     }
 
     @Override
-    public ResponseEntity<Object> deleteCoupon(CouponDelete couponDelete, String requestId) {
+    public ResponseEntity<StatusResponse> deleteCoupon(CouponDelete couponDelete, String requestId) {
         log.info("delete coupon, requestId: [{}]", requestId);
         Coupon coupon = couponRepository.findCoupon(couponDelete.getName());
         if (coupon != null) {
             couponRepository.deleteById(coupon.getId());
+            log.error("delete coupon successful, requestId: [{}]", requestId);
             return new ResponseEntity<>(new StatusResponse("delete successful"), HttpStatus.CREATED);
         } else {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "coupon dont exist, please verify your information");
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "coupon don't exist, please verify your information");
         }
     }
 
-    private ResponseEntity<Object> validationInfo(User user, String requestId) {
-        log.info("Save information in database, requestId: [{}]", requestId);
+    private ResponseEntity<UserResponse> validationInfo(User user, String requestId) {
+        log.info("Save user information in database, requestId: [{}]", requestId);
         if (userRepository.findElement(user.getEmail()) != null) {
             return validationResponse.createDuplicateResponse("Email", requestId);
         }
@@ -174,10 +174,11 @@ public class AdminServiceImpl implements AdminService {
             return validationResponse.createDuplicateResponse("Username", requestId);
         }
         userRepository.save(user);
-        return new ResponseEntity<>(createUserResponse(user), HttpStatus.CREATED);
+        return new ResponseEntity<>(createUserResponse(user,requestId), HttpStatus.CREATED);
     }
 
-    private UserResponse createUserResponse(User user) {
+    private UserResponse createUserResponse(User user, String requestId) {
+        log.info("build UserResponse, requestId: [{}]", requestId);
         UserResponse userResponse = new UserResponse();
         userResponse.setId(jwtService.getToken(user));
         if (!user.getRole().equals("ADMIN")) {
@@ -194,5 +195,16 @@ public class AdminServiceImpl implements AdminService {
         userDTO.setEmail(user.getEmail());
         userDTO.setRole(user.getRole());
         return userDTO;
+    }
+
+    private User buildUser(UserDTO userDTO) {
+        User user = new User();
+        user.setName(userDTO.getName());
+        user.setRole("EMPLOYEE");
+        user.setUsername(userDTO.getUsername());
+        user.setEmail(userDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        user.setState(0);
+        return user;
     }
 }

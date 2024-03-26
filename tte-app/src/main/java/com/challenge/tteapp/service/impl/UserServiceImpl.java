@@ -42,15 +42,12 @@ public class UserServiceImpl implements UserService {
     private final CartRepository cartRepository;
     private final CouponRepository couponRepository;
     @Override
-    public ResponseEntity<Object> loginUser(LogInOutUser logInOutUser, String requestId) {
+    public ResponseEntity<LoginResponse> loginUser(LogInOutUser logInOutUser, String requestId) {
         log.info("Login user, requestId: [{}]", requestId);
         try {
-            User userAuth = userRepository.findElement(logInOutUser.getEmail());
-            if (userAuth == null) {
-                throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "User not found");
-            }
-            String name = userAuth.getUsername();
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
+            User userAuth = userRepository.findElement(logInOutUser.getEmail());
+            String name = userAuth.getUsername();
             if (userAuth.getState().equals(1)) {
                 log.warn("The user is already logged in, requestId: [{}]", requestId);
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user is already logged in");
@@ -65,13 +62,12 @@ public class UserServiceImpl implements UserService {
             loginResponse.setToken(jwtService.getToken(userAuth));
             return new ResponseEntity<>(loginResponse, HttpStatus.CREATED);
         } catch (AuthenticationException e) {
-            throw new AuthenticationException("Incorrect email or password") {
-            };
+            throw new AuthenticationException("Incorrect email or password") {};
         }
     }
 
     @Override
-    public ResponseEntity<Object> registerShopper(ShopperDTO shopperDTO, String requestId) {
+    public ResponseEntity<UserResponse> registerShopper(ShopperDTO shopperDTO, String requestId) {
         log.info("Save Shopper information in database, requestId: [{}]", requestId);
         if (userRepository.findElement(shopperDTO.getEmail()) != null) {
             return validationResponse.createDuplicateResponse("Email", requestId);
@@ -79,12 +75,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findElement(shopperDTO.getUsername()) != null) {
             return validationResponse.createDuplicateResponse("Username", requestId);
         }
-        User shopper = new User();
-        shopper.setUsername(shopperDTO.getUsername());
-        shopper.setEmail(shopperDTO.getEmail());
-        shopper.setPassword(passwordEncoder.encode(shopperDTO.getPassword()));
-        shopper.setRole("CUSTOMER");
-        shopper.setState(0);
+        User shopper = builShopper(shopperDTO);
         userRepository.save(shopper);
         UserResponse userResponse = new UserResponse();
         userResponse.setId(jwtService.getToken(shopper));
@@ -94,8 +85,18 @@ public class UserServiceImpl implements UserService {
         return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
     }
 
+    private User builShopper(ShopperDTO shopperDTO) {
+        User shopper = new User();
+        shopper.setUsername(shopperDTO.getUsername());
+        shopper.setEmail(shopperDTO.getEmail());
+        shopper.setPassword(passwordEncoder.encode(shopperDTO.getPassword()));
+        shopper.setRole("CUSTOMER");
+        shopper.setState(0);
+        return shopper;
+    }
+
     @Override
-    public ResponseEntity<Object> logoutUser(LogInOutUser logInOutUser, String requestId) {
+    public ResponseEntity<StatusResponse> logoutUser(LogInOutUser logInOutUser, String requestId) {
         try {
             log.info("Logout user , requestId: [{}]", requestId);
             User user = userRepository.findElement(logInOutUser.getEmail());
@@ -109,8 +110,8 @@ public class UserServiceImpl implements UserService {
                 log.warn("The user is already logout, requestId: {}", requestId);
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user is already logout");
             }
+            log.info("Logout user: {} successful , requestId: [{}]", name, requestId);
             return new ResponseEntity<>(new StatusResponse("ok"), HttpStatus.CREATED);
-
         } catch (AuthenticationException e) {
             throw new AuthenticationException("Incorrect email or password") {
             };
@@ -118,7 +119,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<Object> retrieverList(String email, String requestId) {
+    public ResponseEntity<WishListResponse> retrieverList(String email, String requestId) {
         User user = userRepository.findElement(email);
         List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
         WishListResponse wishListResponse = new WishListResponse();
@@ -129,28 +130,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<Object> removeListElement(String email, String idProduct, String requestId) {
-        log.info("Remove product in wishlist , requestId: [{}]", requestId);
-        User user = userRepository.findElement(email);
-        List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
-        if (wishList.contains(Integer.parseInt(idProduct))) {
-            wishListRepository.deleteByUserIdAndArticleId(user.getId(), Integer.parseInt(idProduct));
-            return new ResponseEntity<>(new StatusResponse("Elements successful remove"), HttpStatus.CREATED);
-        } else {
-            log.warn("The element does not exist in wishlist, requestId: [{}]", requestId);
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The element does not exist in wishlist");
+    public ResponseEntity<StatusResponse> addElementList(WishListDTO wishListDTO, String idProduct, String email, String requestId) {
+        log.info("Add product in wishlist, requestId: [{}]", requestId);
+        User user;
+        if(wishListDTO.getUser_id().isEmpty()) {
+             user = userRepository.findElement(email);
+        }else {
+             user = userRepository.findElement(wishListDTO.getUser_id());
         }
-    }
-
-    @Override
-    public ResponseEntity<Object> addElementList(WishListDTO wishListDTO, String idProduct, String email, String requestId) {
-        log.info("Add product in wishlist , requestId: [{}]", requestId);
-        User user = userRepository.findElement(email);
+        if(user==null) throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "User don't exist");
         List<Integer> idProducts = productRepository.findProductById();
         if (idProducts.contains(Integer.parseInt(idProduct))) {
             List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
             if (wishList.isEmpty() || !wishList.contains(Integer.parseInt(idProduct))) {
                 wishListRepository.addElementToList(user.getId(), Integer.parseInt(idProduct));
+                log.info("Element successfully added, requestId: [{}]", requestId);
                 return new ResponseEntity<>(new StatusResponse("Element successfully added"), HttpStatus.CREATED);
             } else {
                 log.warn("The element exists in the wishlist, requestId: [{}]", requestId);
@@ -159,6 +153,20 @@ public class UserServiceImpl implements UserService {
         }
         log.warn("The product does not exist, requestId: [{}]", requestId);
         throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The product does not exist");
+    }
+    @Override
+    public ResponseEntity<StatusResponse> removeListElement(String email, String idProduct, String requestId) {
+        log.info("Remove product in wishlist , requestId: [{}]", requestId);
+        User user = userRepository.findElement(email);
+        List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
+        if (wishList.contains(Integer.parseInt(idProduct))) {
+            wishListRepository.deleteByUserIdAndArticleId(user.getId(), Integer.parseInt(idProduct));
+            log.info("Elements successful remove , requestId: [{}]", requestId);
+            return new ResponseEntity<>(new StatusResponse("Elements successful remove"), HttpStatus.CREATED);
+        } else {
+            log.warn("The element does not exist in wishlist, requestId: [{}]", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The element does not exist in wishlist");
+        }
     }
 
     @Override
@@ -219,8 +227,8 @@ public class UserServiceImpl implements UserService {
         cartBeforeCheck.setShopping_cart(productsList);
 
         CouponDTO couponApplied = new CouponDTO();
-        couponApplied.setDiscount_percentage(list.get().getDiscount_percentage());
-        couponApplied.setCoupon_code(list.get().getCoupon_code());
+        couponApplied.setDiscountPercentage(list.get().getDiscountPercentage());
+        couponApplied.setCouponCode(list.get().getCouponCode());
         cartBeforeCheck.setCoupon_applied(couponApplied);
 
 

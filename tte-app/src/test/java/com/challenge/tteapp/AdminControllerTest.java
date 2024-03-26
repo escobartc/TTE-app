@@ -1,13 +1,10 @@
 package com.challenge.tteapp;
 
 import com.challenge.tteapp.controller.AdminController;
-import com.challenge.tteapp.model.User;
-import com.challenge.tteapp.model.UserResponse;
-import com.challenge.tteapp.model.UsersList;
+import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
 import com.challenge.tteapp.model.dto.UserDTO;
-import com.challenge.tteapp.model.UsersDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
@@ -67,17 +64,17 @@ class AdminControllerTest {
         Admin admin = adminInfo();
 
         UserResponse userResponse = new UserResponse();
-        ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        ResponseEntity<UserResponse> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
 
         when(adminService.registerAdmin(eq(admin), anyString())).thenReturn(successResponse);
 
-        ResponseEntity<Object> response = adminController.createAdmin(admin);
+        ResponseEntity<UserResponse> response = adminController.createAdmin(admin);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
         when(passwordEncoder.encode(admin.getPassword())).thenReturn("encodedPassword");
 
-        ResponseEntity<Object> response2 = adminServiceImpl.registerAdmin(admin, "requestId");
+        ResponseEntity<UserResponse> response2 = adminServiceImpl.registerAdmin(admin, "requestId");
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
     }
 
@@ -85,17 +82,17 @@ class AdminControllerTest {
     void RegisterUser() {
         UserDTO userDTO = userInfo();
         UserResponse userResponse = new UserResponse();
-        ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        ResponseEntity<UserResponse> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
 
         when(adminService.register(eq(userDTO), anyString())).thenReturn(successResponse);
 
-        ResponseEntity<Object> response = adminController.createUser(userDTO);
+        ResponseEntity<UserResponse> response = adminController.createUser(userDTO);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
         when(passwordEncoder.encode(userDTO.getPassword())).thenReturn("encodedPassword");
 
-        ResponseEntity<Object> response2 = adminServiceImpl.register(userDTO, "requestId");
+        ResponseEntity<UserResponse> response2 = adminServiceImpl.register(userDTO, "requestId");
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
         userDTO.setRole("other");
         assertThrows(HttpClientErrorException.class, () -> {
@@ -106,17 +103,17 @@ class AdminControllerTest {
     @Test
     void loginAdmin() {
         LoginAdmin loginAdmin = adminLoginInfo();
-        UserResponse userResponse = new UserResponse();
-        ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        TokenRequest tokenRequest = new TokenRequest();
+        ResponseEntity<TokenRequest> successResponse = new ResponseEntity<>(tokenRequest, HttpStatus.CREATED);
 
         when(adminService.loginAdmin(eq(loginAdmin), anyString())).thenReturn(successResponse);
 
-        ResponseEntity<Object> response = adminController.loginAdmin(loginAdmin);
+        ResponseEntity<TokenRequest> response = adminController.loginAdmin(loginAdmin);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
         when(userRepository.findByEmail(loginAdmin.getEmail())).thenReturn(Optional.of(new User()));
-        ResponseEntity<Object> response2 = adminServiceImpl.loginAdmin(loginAdmin, "requestId");
+        ResponseEntity<TokenRequest> response2 = adminServiceImpl.loginAdmin(loginAdmin, "requestId");
 
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
 
@@ -194,7 +191,7 @@ class AdminControllerTest {
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         Admin admin = adminInfo();
         when(userRepository.findElement(eq(admin.getEmail()))).thenReturn(new User());
-        ResponseEntity<Object> response2 = adminServiceImpl.registerAdmin(admin, "requestId");
+        ResponseEntity<UserResponse> response2 = adminServiceImpl.registerAdmin(admin, "requestId");
 
         verify(validationResponse).createDuplicateResponse(eq("Email"), eq("requestId"));
     }
@@ -204,7 +201,7 @@ class AdminControllerTest {
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         Admin admin = adminInfo();
         lenient().when(userRepository.findElement(eq(admin.getUsername()))).thenReturn(new User());
-        ResponseEntity<Object> response2 = adminServiceImpl.registerAdmin(admin, "requestId");
+        ResponseEntity<UserResponse> response2 = adminServiceImpl.registerAdmin(admin, "requestId");
         verify(validationResponse).createDuplicateResponse(eq("Username"), eq("requestId"));
     }
 

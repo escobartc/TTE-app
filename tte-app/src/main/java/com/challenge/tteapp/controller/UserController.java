@@ -1,12 +1,12 @@
 package com.challenge.tteapp.controller;
 
 import com.challenge.tteapp.configuration.UserRoleContext;
-import com.challenge.tteapp.model.CouponCode;
-import com.challenge.tteapp.model.LogInOutUser;
+import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.dto.CartDTO;
 import com.challenge.tteapp.model.dto.ShopperDTO;
 import com.challenge.tteapp.model.dto.WishListDTO;
 import com.challenge.tteapp.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -24,36 +24,36 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping(path = "/auth", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Object> createShopper(@RequestBody ShopperDTO shopperDTO) {
+    public ResponseEntity<UserResponse> createShopper(@RequestBody @Valid ShopperDTO shopperDTO) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, creation Shopper, with requestId: [{}]", requestId);
         return userService.registerShopper(shopperDTO, requestId);
     }
 
     @PostMapping(path = "/login", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Object> loginUser(@RequestBody LogInOutUser user) {
+    public ResponseEntity<LoginResponse> loginUser(@RequestBody @Valid LogInOutUser user) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, login user, with requestId: [{}]", requestId);
         return userService.loginUser(user, requestId);
     }
 
     @PostMapping(path = "/logout", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Object> logoutUser(@RequestBody LogInOutUser user) {
+    public ResponseEntity<StatusResponse> logoutUser(@RequestBody @Valid LogInOutUser user) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, logout user, with requestId: [{}]", requestId);
         return userService.logoutUser(user, requestId);
     }
 
     @GetMapping(path = "/user/wishlist")
-    public ResponseEntity<Object> retrieverList() {
+    public ResponseEntity<WishListResponse> retrieverList() {
         String email = UserRoleContext.getName();
         String requestId = UUID.randomUUID().toString();
-        log.info("JOIN TO TTE-APP, retriever List, with requestId: [{}]", requestId);
+        log.info("JOIN TO TTE-APP, retriever user list, with requestId: [{}]", requestId);
         return userService.retrieverList(email, requestId);
     }
 
     @PostMapping(path = "/user/wishlist/add/{product_id}", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Object> addElementList(@PathVariable("product_id") String idProduct, @RequestBody WishListDTO wishListDTO) {
+    public ResponseEntity<StatusResponse> addElementList(@PathVariable("product_id") String idProduct, @RequestBody WishListDTO wishListDTO) {
         String email = UserRoleContext.getName();
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, retriever List, with requestId: [{}]", requestId);
@@ -61,7 +61,7 @@ public class UserController {
     }
 
     @DeleteMapping(path = "/user/wishlist/remove/{product_id}")
-    public ResponseEntity<Object> removeListElement(@PathVariable("product_id") String idProduct) {
+    public ResponseEntity<StatusResponse> removeListElement(@PathVariable("product_id") String idProduct) {
         String email = UserRoleContext.getName();
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, remove element in wishList, with requestId: [{}]", requestId);
