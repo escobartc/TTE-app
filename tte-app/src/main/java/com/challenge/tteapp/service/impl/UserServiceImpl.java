@@ -1,17 +1,14 @@
 package com.challenge.tteapp.service.impl;
 
 import com.challenge.tteapp.model.*;
-import com.challenge.tteapp.model.dto.CartDTO;
-import com.challenge.tteapp.model.dto.CouponDTO;
-import com.challenge.tteapp.model.dto.ShopperDTO;
-import com.challenge.tteapp.model.dto.WishListDTO;
+import com.challenge.tteapp.model.dto.*;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.repository.*;
 import com.challenge.tteapp.service.UserService;
-import io.swagger.models.auth.In;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,14 +18,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
-import javax.swing.*;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import static com.challenge.tteapp.model.Constants.MESSAGE;
+import static com.challenge.tteapp.model.Constants.CREATED;
 
 @Service
 @RequiredArgsConstructor
@@ -44,14 +38,17 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final CouponRepository couponRepository;
+    private final OrdersRepository ordersRepository;
+    private final OrderProductsRepository orderProductsRepository;
 
     @Override
     public ResponseEntity<LoginResponse> loginUser(LogInOutUser logInOutUser, String requestId) {
         log.info("Login user, requestId: [{}]", requestId);
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
             User userAuth = userRepository.findElement(logInOutUser.getEmail());
+            if (userAuth == null) throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user does not exist");
             String name = userAuth.getUsername();
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
             if (userAuth.getState().equals(1)) {
                 log.warn("The user is already logged in, requestId: [{}]", requestId);
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user is already logged in");
@@ -64,7 +61,7 @@ public class UserServiceImpl implements UserService {
             loginResponse.setUsername(name);
             loginResponse.setEmail(logInOutUser.getEmail());
             loginResponse.setToken(jwtService.getToken(userAuth));
-            return new ResponseEntity<>(loginResponse, HttpStatus.CREATED);
+            return new ResponseEntity<>(loginResponse, HttpStatus.OK);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("Incorrect email or password") {
             };
@@ -80,7 +77,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findElement(shopperDTO.getUsername()) != null) {
             return validationResponse.createDuplicateResponse("Username", requestId);
         }
-        User shopper = builShopper(shopperDTO);
+        User shopper = buildShopper(shopperDTO);
         userRepository.save(shopper);
         UserResponse userResponse = new UserResponse();
         userResponse.setId(jwtService.getToken(shopper));
@@ -90,7 +87,7 @@ public class UserServiceImpl implements UserService {
         return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
     }
 
-    private User builShopper(ShopperDTO shopperDTO) {
+    private User buildShopper(ShopperDTO shopperDTO) {
         User shopper = new User();
         shopper.setUsername(shopperDTO.getUsername());
         shopper.setEmail(shopperDTO.getEmail());
@@ -116,7 +113,7 @@ public class UserServiceImpl implements UserService {
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user is already logout");
             }
             log.info("Logout user: {} successful , requestId: [{}]", name, requestId);
-            return new ResponseEntity<>(new StatusResponse("ok"), HttpStatus.CREATED);
+            return new ResponseEntity<>(new StatusResponse("ok"), HttpStatus.OK);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("Incorrect email or password") {
             };
@@ -131,26 +128,34 @@ public class UserServiceImpl implements UserService {
         wishListResponse.setUser_id(user.getId().toString());
         wishListResponse.setWishlist(wishList);
         log.info("Retriever list successful, requestId: [{}]", requestId);
-        return new ResponseEntity<>(wishListResponse, HttpStatus.CREATED);
+        return new ResponseEntity<>(wishListResponse, HttpStatus.OK);
     }
 
     @Override
     public ResponseEntity<StatusResponse> addElementList(WishListDTO wishListDTO, String idProduct, String email, String requestId) {
         log.info("Add product in wishlist, requestId: [{}]", requestId);
         User user;
-        if (wishListDTO.getUser_id().isEmpty()) {
+        if (wishListDTO.getUserId().isEmpty()) {
             user = userRepository.findElement(email);
         } else {
-            user = userRepository.findElement(wishListDTO.getUser_id());
+            user = userRepository.findId(Long.valueOf(wishListDTO.getUserId()));
         }
-        if (user == null) throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "User don't exist");
+
+        if (user == null) {
+            log.warn("User not found, requestId: [{}]", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "User does not exist");
+        }
+        if (!wishListDTO.getUserId().isEmpty() && !email.equals(user.getEmail())) {
+            log.warn("Mismatch between provided userId and email, requestId: [{}]", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Mismatch between provided userId and email");
+        }
         List<Integer> idProducts = productRepository.findProductById();
         if (idProducts.contains(Integer.parseInt(idProduct))) {
             List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
             if (wishList.isEmpty() || !wishList.contains(Integer.parseInt(idProduct))) {
                 wishListRepository.addElementToList(user.getId(), Integer.parseInt(idProduct));
                 log.info("Element successfully added, requestId: [{}]", requestId);
-                return new ResponseEntity<>(new StatusResponse("Element successfully added"), HttpStatus.CREATED);
+                return new ResponseEntity<>(new StatusResponse("Element successfully added"), HttpStatus.OK);
             } else {
                 log.warn("The element exists in the wishlist, requestId: [{}]", requestId);
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The element exists in the wishlist");
@@ -168,7 +173,7 @@ public class UserServiceImpl implements UserService {
         if (wishList.contains(Integer.parseInt(idProduct))) {
             wishListRepository.deleteByUserIdAndArticleId(user.getId(), Integer.parseInt(idProduct));
             log.info("Elements successful remove , requestId: [{}]", requestId);
-            return new ResponseEntity<>(new StatusResponse("Elements successful remove"), HttpStatus.CREATED);
+            return new ResponseEntity<>(new StatusResponse("Elements successful remove"), HttpStatus.OK);
         } else {
             log.warn("The element does not exist in wishlist, requestId: [{}]", requestId);
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The element does not exist in wishlist");
@@ -214,8 +219,8 @@ public class UserServiceImpl implements UserService {
         List<Products> productsList = new ArrayList<>();
         for (Object[] element : cart) {
             Products products = new Products();
-            products.setProductCart((Long) element[0]);
-            products.setQuantity((Long) element[1]);
+            products.setProductId((Long) element[0]);
+            products.setQuantity((Integer) element[1]);
             productsList.add(products);
         }
         return productsList;
@@ -226,28 +231,126 @@ public class UserServiceImpl implements UserService {
         log.info("Add coupon to cart: {} , requestId: [{}]", requestId, email);
         User user = userRepository.findElement(email);
         Coupon coupon = null;
-        if (couponCode.getCouponCode().isEmpty()) {
-            List<Long> cartCouponIds = cartRepository.allCart(user.getId());
-            if (!cartCouponIds.isEmpty()) {
-                couponRepository.updateCouponState(cartCouponIds.get(0),  Boolean.FALSE);
-                cartRepository.removeCouponFromCart(user.getId());
-                log.info("Coupon successfully removed: {} , requestId: [{}]", requestId, email);
-            }
-        } else {
+
+        if (!couponCode.getCouponCode().isEmpty()) {
             coupon = couponRepository.findCoupon(couponCode.getCouponCode());
             if (coupon == null || coupon.getUseCoupon().equals(true)) {
                 log.warn("Coupon does not exist or was used, please verify your information: {} , requestId: [{}]"
                         , requestId, email);
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Coupon does not exist or was used," +
                         " please verify your information");
-            } else {
-                couponRepository.updateCouponState(coupon.getId(),  Boolean.TRUE);
-                cartRepository.updateCartCoupon(coupon.getId(),user.getId(),"CREATED");
-                log.info("Coupon successfully added: {} , requestId: [{}]", requestId, email);
             }
         }
+
+        if (couponCode.getCouponCode().isEmpty()) {
+            Long cartCouponId = ordersRepository.findCouponId(user.getId());
+            if (cartCouponId != null) {
+                couponRepository.updateCouponState(cartCouponId, Boolean.FALSE);
+            }
+        }
+
+        buildOrder(Optional.ofNullable(coupon), user);
+        log.info("Coupon successfully added: {} , requestId: [{}]", requestId, email);
+
         CartBeforeCheck cartBeforeCheck = buildResponseCheckout(user, Optional.ofNullable(coupon));
-        return new ResponseEntity<>(cartBeforeCheck, HttpStatus.CREATED);
+        return new ResponseEntity<>(cartBeforeCheck, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<MessageResponse> cartCheckout(String email, String requestId) {
+        log.info("cartCheckout cart: {} , requestId: [{}]", requestId, email);
+        User user = userRepository.findElement(email);
+
+        Orders orders = ordersRepository.findOrders(user.getId(), "CREATED");
+        if(orders!=null && orders.getOrderStatus().equals(CREATED)){
+            couponRepository.updateCouponState(orders.getCouponId(), Boolean.TRUE);
+            List<Products> productsList = buildProducts(user);
+            for (Products product : productsList) {
+                OrderProducts orderProduct = new OrderProducts();
+                orderProduct.setOrderId(orders.getId());
+                orderProduct.setQuantity(product.getQuantity());
+                orderProduct.setProductId(product.getProductId());
+                orderProductsRepository.save(orderProduct);
+            }
+            orders.setOrderStatus("ACCEPTED");
+            ordersRepository.save(orders);
+        }else{
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "not orders found," +
+                    " please verify your information");
+        }
+        cartRepository.deleteElementsByUserId(user.getId());
+        return new ResponseEntity<>(new MessageResponse("thanks " +user.getUsername()+ " for your purchase"), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<List<CartcheckoutReview>> cartCheckoutReview(String email, String requestId) {
+        log.info("cart checkout review: {} , requestId: [{}]", requestId, email);
+
+        List<Orders> orders = ordersRepository.findAllOrders();
+        List<CartcheckoutReview> response = new ArrayList<>();
+
+        for (Orders order : orders) {
+            List<OrderProducts> orderProducts = orderProductsRepository.findAllOrderProducts(order.getId());
+            CartcheckoutReview cartcheckoutReview = new CartcheckoutReview();
+            cartcheckoutReview.setUserId(order.getUser());
+            cartcheckoutReview.setOrderId(order.getId());
+            cartcheckoutReview.setStatus(order.getOrderStatus());
+
+            List<Products> productsList = new ArrayList<>();
+            for (OrderProducts orderProduct : orderProducts) {
+                Products product = new Products();
+                product.setProductId(orderProduct.getProductId());
+                product.setQuantity(orderProduct.getQuantity());
+                productsList.add(product);
+            }
+            cartcheckoutReview.setProducts(productsList);
+            response.add(cartcheckoutReview);
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<Object> cartCheckoutUpdateState(UpdateStatusOrderDTO updateStatusOrderDTO, String requestId) {
+        log.info("update order, requestId: [{}]", requestId);
+        Orders order = ordersRepository.findOrdersId(updateStatusOrderDTO.getIdOrder());
+        if (order != null) {
+            String newStatus = updateStatusOrderDTO.getStatus();
+            if ("SEND".equals(newStatus) || "CLOSED".equals(newStatus)) {
+                order.setOrderStatus(newStatus);
+                ordersRepository.save(order);
+                return new ResponseEntity<>(new MessageResponse("Status update successful"), HttpStatus.OK);
+            } else {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid status update request");
+            }
+        } else {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Order does not exist");
+        }
+    }
+
+
+
+    private void buildOrder(Optional<Coupon> coupon, User user) {
+        Long userId = user.getId();
+        Orders existingOrder = ordersRepository.findOrders(userId, "CREATED");
+
+        if (existingOrder != null) {
+            existingOrder.setOrderStatus(CREATED);
+            if (coupon.isPresent()) {
+                existingOrder.setCouponId(coupon.get().getId());
+            } else {
+                existingOrder.setCouponId(null);
+            }
+            ordersRepository.save(existingOrder);
+        } else {
+            Orders newOrder = new Orders();
+            newOrder.setUser(userId);
+            newOrder.setOrderStatus(CREATED);
+            if (coupon.isPresent()) {
+                newOrder.setCouponId(coupon.get().getId());
+            }
+            ordersRepository.save(newOrder);
+        }
     }
 
     private CartBeforeCheck buildResponseCheckout(User user, Optional<Coupon> coupon) {
@@ -260,7 +363,7 @@ public class UserServiceImpl implements UserService {
         double totalBeforeDiscount = 0.0;
 
         for (Products product : productsList) {
-            Double price = productRepository.findProductPriceById(product.getProductCart());
+            Double price = productRepository.findProductPriceById(product.getProductId());
             if (price != null) {
                 totalBeforeDiscount += price * product.getQuantity();
             }
@@ -282,7 +385,6 @@ public class UserServiceImpl implements UserService {
         couponApplied.setDiscountPercentage(coupon.map(Coupon::getDiscountPercentage).orElse(0));
         couponApplied.setCouponCode(coupon.map(Coupon::getCouponCode).orElse(null));
         cartBeforeCheck.setCouponApplied(couponApplied);
-
         return cartBeforeCheck;
     }
 

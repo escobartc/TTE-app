@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 @Repository
+@SuppressWarnings("SqlNoDataSourceInspection")
 public interface CouponRepository extends JpaRepository<Coupon,Long> {
 
     @Query("SELECT couponCode FROM Coupon")

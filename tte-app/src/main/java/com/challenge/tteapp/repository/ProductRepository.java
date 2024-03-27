@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.util.List;
 @Repository
+@SuppressWarnings("SqlNoDataSourceInspection")
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByInventoryAvailableGreaterThan(int available);
     @Query("SELECT w.articleId FROM WishList w WHERE w.user = :userId")

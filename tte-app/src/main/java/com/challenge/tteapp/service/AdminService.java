@@ -14,7 +14,7 @@ public interface AdminService {
     ResponseEntity<UserResponse> registerAdmin(Admin admin, String requestId);
     ResponseEntity<TokenRequest> loginAdmin(LoginAdmin admin, String requestId);
     ResponseEntity<UsersList> viewUsers(String requestId);
-    ResponseEntity<Object> userUpdate(UserDTO userDTOUpdate, String requestId);
+    ResponseEntity<MessageResponse> userUpdate(UserDTO userDTOUpdate, String requestId);
     ResponseEntity<Object> deleteUser(UsersDTO users, String requestId);
     ResponseEntity<StatusResponse> createCoupon(CouponDTO couponDTO,String email, String requestId);
     ResponseEntity<List<Coupon>> viewAllCoupon(String requestId);

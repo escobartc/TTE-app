@@ -14,27 +14,19 @@ import java.util.List;
 public interface CartRepository extends JpaRepository<Cart,Long> {
     @Query("SELECT c.cartProduct FROM Cart c WHERE c.user = :userId")
     List<Integer> findArticleIdsByUserId(@Param("userId") Long userId);
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Cart c WHERE c.user = :userId")
+    void deleteElementsByUserId(@Param("userId") Long userId);
 
-    @Query(value = "SELECT c.coupon_id  FROM cart c WHERE c.user_id  = :userId",nativeQuery = true)
-    List<Long>  allCart(@Param("userId") Long userId);
-
-    @Query(value = "SELECT c.product_cart, c.quantity  FROM cart c WHERE c.user_id = :userId", nativeQuery = true)
+    @Query(value = "SELECT c.product_id, c.quantity  FROM cart c WHERE c.user_id = :userId", nativeQuery = true)
     List<Object[]> findProductsCartById(@Param("userId") Long userId);
     @Transactional
     @Modifying
-    @Query(value = "INSERT INTO cart (user_id, product_cart, quantity, order_status) VALUES (:userId, :articleId, :quantity)", nativeQuery = true)
-    void addElementToList(@Param("userId") Long userId, @Param("articleId") Integer productId,@Param("quantity") Integer quantity);
+    @Query(value = "INSERT INTO cart (user_id, product_id, quantity) VALUES (:userId, :articleId, :quantity)", nativeQuery = true)
+    void addElementToList(@Param("userId") Long userId, @Param("articleId") Integer articleId,@Param("quantity") Integer quantity);
     @Transactional
     @Modifying
     @Query(value = "UPDATE cart SET cart.quantity = :quantity WHERE cart.user_id  = :userId",nativeQuery = true)
     void updateCartQuantity(@Param("quantity") Integer quantity, @Param("userId") Long userId);
-
-    @Transactional
-    @Modifying
-    @Query(value = "UPDATE Cart c SET c.couponId = NULL WHERE c.user = :userId")
-    void removeCouponFromCart(@Param("userId") Long userId);
-    @Transactional
-    @Modifying
-    @Query(value = "UPDATE cart SET cart.coupon_id = :CouponId, cart.order_status =:orderStatus WHERE cart.user_id  = :userId",nativeQuery = true)
-    void updateCartCoupon(@Param("CouponId") Long CouponId, @Param("userId") Long userId, @Param("orderStatus") String orderStatus);
 }

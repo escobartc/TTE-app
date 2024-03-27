@@ -53,7 +53,7 @@ public class AdminController {
     }
 
     @PutMapping(path = "/user")
-    public ResponseEntity<Object> updatingUser(@RequestBody UserDTO userDTOUpdate) {
+    public ResponseEntity<MessageResponse> updatingUser(@RequestBody UserDTO userDTOUpdate) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, Update user by admin, with requestId: {}", requestId);
         return adminService.userUpdate(userDTOUpdate, requestId);

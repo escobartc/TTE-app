@@ -82,14 +82,14 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     private boolean isAuthorized(String role, String endpoint) {
         if (endpoint.equals("/api/admin/auth") || endpoint.equals("/api/user") || endpoint.equals("/api/coupon")) {
             return role.equals(ADMIN);
-        } else if (endpoint.startsWith("/api/product")) {
+        } else if (endpoint.startsWith("/api/product") || endpoint.startsWith("/api/cart/checkout/review")
+                || endpoint.startsWith("/api/category")) {
             return role.equals(ADMIN) || role.equals(EMPLOYEE);
         } else if (endpoint.startsWith("/api/store")) {
             return role.equals(CUSTOMER);
-        } else if (endpoint.startsWith("/api/category")) {
-            return role.equals(ADMIN) || role.equals(EMPLOYEE);
-        }else if (endpoint.startsWith("/api/user/wishlist") || endpoint.startsWith("api/user/wishlist/add")
-                || endpoint.startsWith("/api/cart") || endpoint.startsWith("/api/cart/add") || endpoint.startsWith("/cart/checkout") ){
+        } else if (endpoint.startsWith("/api/user/wishlist") || endpoint.startsWith("/api/user/wishlist/add")
+                || endpoint.startsWith("/api/cart") || endpoint.startsWith("/api/cart/add")
+                || endpoint.startsWith("/cart/checkout") ){
             return role.equals(CUSTOMER);
         }else {
             return false;

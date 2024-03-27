@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 @Repository
+@SuppressWarnings("SqlNoDataSourceInspection")
 public interface WishListRepository extends JpaRepository<WishList,Long> {
 
     @Query("SELECT w.articleId FROM WishList w WHERE w.user = :userId")

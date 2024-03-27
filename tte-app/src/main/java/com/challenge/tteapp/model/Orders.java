@@ -3,11 +3,13 @@ package com.challenge.tteapp.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 @Entity
-@Table(name = "cart")
+@Table(name = "orders")
 @Getter
 @Setter
-public class Cart {
+public class Orders {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -16,8 +18,9 @@ public class Cart {
     @Column(name = "user_id")
     private Long user;
 
-    @Column(name = "product_id")
-    private Integer cartProduct;
+    @Column(name = "order_status")
+    private String orderStatus;
 
-    private Integer quantity;
+    @Column(name = "coupon_id")
+    private Long couponId;
 }

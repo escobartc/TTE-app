@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class Products {
-    private Long productCart;
-    private Long quantity;
+    @JsonProperty("product_id")
+    private Long productId;
+    private Integer quantity;
 }

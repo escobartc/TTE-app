@@ -4,6 +4,7 @@ import com.challenge.tteapp.configuration.UserRoleContext;
 import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.dto.CartDTO;
 import com.challenge.tteapp.model.dto.ShopperDTO;
+import com.challenge.tteapp.model.dto.UpdateStatusOrderDTO;
 import com.challenge.tteapp.model.dto.WishListDTO;
 import com.challenge.tteapp.service.UserService;
 import jakarta.validation.Valid;
@@ -91,6 +92,29 @@ public class UserController {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, cart user: {}, with requestId: [{}]", email, requestId);
         return userService.addCoupon(couponCode, email, requestId);
+    }
+
+    @GetMapping(path = "/cart/checkout")
+    public ResponseEntity<MessageResponse> cartCheckout() {
+        String email = UserRoleContext.getName();
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, cart checkout: {}, with requestId: [{}]", email, requestId);
+        return userService.cartCheckout(email, requestId);
+    }
+
+    @GetMapping(path = "/cart/checkout/review")
+    public ResponseEntity<List<CartcheckoutReview>> cartCheckoutReview() {
+        String email = UserRoleContext.getName();
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, cart checkout: {}, with requestId: [{}]", email, requestId);
+        return userService.cartCheckoutReview(email, requestId);
+    }
+
+    @PutMapping(path = "/cart/checkout/review")
+    public ResponseEntity<Object> cartCheckoutUpdateState(@RequestBody UpdateStatusOrderDTO updateStatusOrderDTO) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, updateOrder , with requestId: [{}]", requestId);
+        return userService.cartCheckoutUpdateState(updateStatusOrderDTO, requestId);
     }
 
 }

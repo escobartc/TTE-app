@@ -99,7 +99,7 @@ class UserControllerTest {
         existingUser.setState(1);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
         ResponseEntity<StatusResponse> response2 = userServiceimpl.logoutUser(logInOutUser, "requestId");
-        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
 
     }
 
@@ -130,7 +130,7 @@ class UserControllerTest {
         existingUser.setState(0);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
         ResponseEntity<LoginResponse> response2 = userServiceimpl.loginUser(logInOutUser, "requestId");
-        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
 
     }
 
@@ -153,7 +153,7 @@ class UserControllerTest {
         lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values);
 
         ResponseEntity<WishListResponse> response2 = userServiceimpl.retrieverList("email", "requestId");
-        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
     }
 
     @Test
@@ -176,7 +176,7 @@ class UserControllerTest {
     @Test
     void addElementListTest() {
         WishListDTO wishListDTO = new WishListDTO();
-        wishListDTO.setUser_id("12");
+        wishListDTO.setUserId("12");
         WishListResponse wishListResponse = new WishListResponse();
         wishListResponse.setUser_id("id");
 
@@ -199,13 +199,13 @@ class UserControllerTest {
         lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values2);
         when(productRepository.findProductById()).thenReturn(values);
         ResponseEntity<StatusResponse> response2 = userServiceimpl.addElementList(wishListDTO,"3","email" ,"requestId");
-        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
     }
 
     @Test
     void addElementListTesError() {
         WishListDTO wishListDTO = new WishListDTO();
-        wishListDTO.setUser_id("12");
+        wishListDTO.setUserId("12");
 
 
         ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
@@ -226,7 +226,7 @@ class UserControllerTest {
         lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values2);
         when(productRepository.findProductById()).thenReturn(values);
         ResponseEntity<StatusResponse> response2 = userServiceimpl.addElementList(wishListDTO,"3","email" ,"requestId");
-        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
     }
 
     @Test
@@ -245,7 +245,7 @@ class UserControllerTest {
         lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values);
 
         ResponseEntity<StatusResponse> response2 = userServiceimpl.removeListElement("email", "1", "requestId");
-        assertEquals(HttpStatus.CREATED, response2.getStatusCode());
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
 
     }
 

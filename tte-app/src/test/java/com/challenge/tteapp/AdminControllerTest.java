@@ -4,10 +4,12 @@ import com.challenge.tteapp.controller.AdminController;
 import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.dto.CouponDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
+import com.challenge.tteapp.repository.CouponRepository;
 import com.challenge.tteapp.repository.UserRepository;
 import com.challenge.tteapp.repository.WishListRepository;
 import com.challenge.tteapp.service.AdminService;
@@ -19,12 +21,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,7 +50,8 @@ class AdminControllerTest {
     private AdminService adminService;
     @Mock
     private UserRepository userRepository;
-
+    @Mock
+    private CouponRepository couponRepository;
     @Mock
     private WishListRepository wishListRepository;
     @InjectMocks
@@ -120,6 +130,15 @@ class AdminControllerTest {
     }
 
     @Test
+    void loginAdminError() {
+        LoginAdmin loginAdmin = adminLoginInfo();
+        when(authenticationManager.authenticate(new UsernamePasswordAuthenticationToken("email","username"))).thenReturn((Authentication) new User());
+        assertThrows(AuthenticationException.class, () -> {
+            adminServiceImpl.loginAdmin(loginAdmin, "requestId");
+        });
+    }
+
+    @Test
     void viewUserTest() {
         UsersList userResponse = new UsersList();
         ResponseEntity<UsersList> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
@@ -143,12 +162,12 @@ class AdminControllerTest {
     @Test
     void UserUpdate() {
         UserDTO userResponse = userInfo();
-        ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        ResponseEntity<MessageResponse> successResponse = new ResponseEntity<>(new MessageResponse(), HttpStatus.CREATED);
         when(adminService.userUpdate(eq(userResponse), anyString())).thenReturn(successResponse);
-        ResponseEntity<Object> response = adminController.updatingUser(userResponse);
+        ResponseEntity<MessageResponse> response = adminController.updatingUser(userResponse);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         when(userRepository.findElement(userResponse.getUsername())).thenReturn(new User());
-        ResponseEntity<Object> response2 = adminServiceImpl.userUpdate(userResponse, "requestId");
+        ResponseEntity<MessageResponse> response2 = adminServiceImpl.userUpdate(userResponse, "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
 
         when(userRepository.findElement(userResponse.getUsername())).thenReturn(null);
@@ -205,6 +224,53 @@ class AdminControllerTest {
         verify(validationResponse).createDuplicateResponse(eq("Username"), eq("requestId"));
     }
 
+    @Test
+    void createCoupon() {
+        CouponDTO couponDTO = new CouponDTO();
+        couponDTO.setCouponCode("CuouponTest");
+        couponDTO.setDiscountPercentage(21);
+
+        ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
+        lenient().when(adminService.createCoupon(eq(couponDTO), anyString(),anyString())).thenReturn(successResponse);
+        adminController.createCoupon(couponDTO);
+        lenient().when(couponRepository.findNameCoupon()).thenReturn(new ArrayList<>());
+        adminServiceImpl.createCoupon(couponDTO,"email" ,"requestId");
+        List<String> coupons = new ArrayList<>();
+        coupons.add("CuouponTest");
+        lenient().when(couponRepository.findNameCoupon()).thenReturn(coupons);
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.createCoupon(couponDTO,"email", "requestId");
+        });
+    }
+
+    @Test
+    void viewCoupons(){
+        ResponseEntity<List<Coupon>> successResponse = new ResponseEntity<>(new ArrayList<>(), HttpStatus.CREATED);
+        lenient().when(adminService.viewAllCoupon(anyString())).thenReturn(successResponse);
+        adminController.viewAllCoupon();
+        lenient().when(couponRepository.findAll()).thenReturn(new ArrayList<>());
+        adminServiceImpl.viewAllCoupon("requestId");
+    }
+
+    @Test
+    void deleteCoupons(){
+        CouponDelete couponDelete = new CouponDelete();
+        couponDelete.setName("name");
+        ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
+        lenient().when(adminService.deleteCoupon(eq(couponDelete), anyString())).thenReturn(successResponse);
+        adminController.deleteCoupon(couponDelete);
+        lenient().when(couponRepository.findCoupon(anyString())).thenReturn(new Coupon());
+        adminServiceImpl.deleteCoupon(couponDelete,"requestId");
+    }
+
+    @Test
+    void deleteCouponError(){
+        CouponDelete couponDelete = new CouponDelete();
+        couponDelete.setName("name");
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.deleteCoupon(couponDelete, "requestId");
+        });
+    }
 
     private static Admin adminInfo() {
         Admin admin = new Admin();

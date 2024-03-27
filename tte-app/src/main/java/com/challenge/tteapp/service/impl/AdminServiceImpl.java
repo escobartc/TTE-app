@@ -26,10 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static com.challenge.tteapp.model.Constants.MESSAGE;
 
@@ -93,19 +90,23 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<Object> userUpdate(UserDTO userDTOUpdate, String requestId) {
+    public ResponseEntity<MessageResponse> userUpdate(UserDTO userDTOUpdate, String requestId) {
         User user = userRepository.findElement(userDTOUpdate.getUsername());
         if (user == null) {
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "data incorrect, please verify your information");
         }
         if (userDTOUpdate.getEmail() != null) {
+            if (userRepository.findElement(userDTOUpdate.getEmail()) != null) {
+                log.warn("email exist in database, with requestId: [{}]", requestId);
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "email exist in database");
+            }
             user.setEmail(userDTOUpdate.getEmail());
         }
         if (userDTOUpdate.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(userDTOUpdate.getPassword()));
         }
         userRepository.save(user);
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of(MESSAGE, "User " + userDTOUpdate.getUsername() + " has been updated successfully"));
+        return new ResponseEntity<>(new MessageResponse("User " + userDTOUpdate.getUsername() + " has been updated successfully"), HttpStatus.OK);
     }
 
     @Override
