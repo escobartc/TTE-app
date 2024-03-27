@@ -181,25 +181,15 @@ class UserControllerTest {
         wishListResponse.setUser_id("id");
 
         ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
-        lenient().when(userService.addElementList(eq(wishListDTO), anyString() ,"1" ,anyString())).thenReturn(successResponse);
+        lenient().when(userService.addElementList(eq(wishListDTO), anyString() ,anyString() ,anyString())).thenReturn(successResponse);
         ResponseEntity<StatusResponse> response = userController.addElementList("idProduct",wishListDTO);
 
         User user = new User();
         user.setId(1L);
-        when(userRepository.findElement(anyString())).thenReturn(user);
         when(userRepository.findId(anyLong())).thenReturn(user);
-
-        List<Integer> values = new ArrayList<>();
-        values.add(1);
-        values.add(2);
-        values.add(3);
-
-        List<Integer> values2 = new ArrayList<>();
-        values.add(1);
-        values.add(2);
-        lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(values2);
-        when(productRepository.findProductById()).thenReturn(values);
-        userServiceimpl.addElementList(wishListDTO,"3","email" ,"requestId");
+        assertThrows(HttpClientErrorException.class, () -> {
+            userServiceimpl.addElementList(wishListDTO, "1", "email","requestId");
+        });
     }
 
     @Test
