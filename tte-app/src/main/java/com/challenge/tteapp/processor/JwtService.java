@@ -2,7 +2,9 @@ package com.challenge.tteapp.processor;
 
 import com.challenge.tteapp.configuration.DataConfig;
 import com.challenge.tteapp.model.User;
+import com.challenge.tteapp.repository.UserRepository;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 public class JwtService {
 
     private final DataConfig dataConfig;
+    private final UserRepository userRepository;
 
     public String getToken(User user) {
         return getToken(new HashMap<>(), user);
@@ -60,14 +63,27 @@ public class JwtService {
         return (username.equals(userDetails.getUsername())&& !isTokenExpired(token));
     }
 
-    private Claims getAllClaims(String token)
-    {
-        return Jwts
-                .parserBuilder()
-                .setSigningKey(getKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+    private Claims getAllClaims(String token) {
+        try {
+            return Jwts
+                    .parserBuilder()
+                    .setSigningKey(getKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException e) {
+            String expiredTokenUsername = e.getClaims().getSubject();
+            if (expiredTokenUsername != null) {
+                User user = userRepository.findElement(expiredTokenUsername);
+                String name = user.getUsername();
+                if (user.getState().equals(1)) {
+                    user.setState(0);
+                    user.setUsername(name);
+                    userRepository.save(user);
+                }
+            }
+            throw e;
+        }
     }
     public <T> T getClaim(String token, Function<Claims,T> claimsResolver)
     {

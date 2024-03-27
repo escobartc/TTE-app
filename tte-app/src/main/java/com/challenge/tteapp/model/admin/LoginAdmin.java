@@ -1,7 +1,8 @@
 package com.challenge.tteapp.model.admin;
 
 
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,7 +12,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class LoginAdmin {
 
+    @Email(message = "Please provide a valid email address")
     private String email;
-    private String password;
 
+    @NotEmpty(message = "Password cannot be empty")
+    private String password;
 }

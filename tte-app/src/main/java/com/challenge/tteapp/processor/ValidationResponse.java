@@ -1,6 +1,7 @@
 package com.challenge.tteapp.processor;
 
 
+import com.challenge.tteapp.model.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import org.springframework.web.client.HttpClientErrorException;
 public class ValidationResponse {
 
     private final ValidationError validationError;
-    public ResponseEntity<Object> createDuplicateResponse(String field, String requestId) {
+    public ResponseEntity<UserResponse> createDuplicateResponse(String field, String requestId) {
         log.warn("{} duplicated, with requestId: [{}]", field, requestId);
         throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, field + " exist in database");
     }
