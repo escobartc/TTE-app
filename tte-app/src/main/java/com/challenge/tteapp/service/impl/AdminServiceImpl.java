@@ -3,15 +3,13 @@ package com.challenge.tteapp.service.impl;
 import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.dto.ApprovalAdminDTO;
 import com.challenge.tteapp.model.dto.CouponDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
-import com.challenge.tteapp.repository.CouponRepository;
-import com.challenge.tteapp.repository.UserRepository;
-import com.challenge.tteapp.repository.ProductRepository;
-import com.challenge.tteapp.repository.WishListRepository;
+import com.challenge.tteapp.repository.*;
 import com.challenge.tteapp.service.AdminService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +36,8 @@ public class AdminServiceImpl implements AdminService {
     private final UserRepository userRepository;
     private final CouponRepository couponRepository;
     private final WishListRepository wishListRepository;
+    private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
@@ -81,6 +81,82 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    public ResponseEntity<MessageResponse> approvalJobs(ApprovalAdminDTO approvalAdminDTO, String operation, String requestId) {
+        log.info("change status for jobs by admin, with requestId: {}", requestId);
+        String action = approvalAdminDTO.getAction();
+        if (operation.equals("product")) {
+            log.info("search product by admin, with requestId: {}", requestId);
+            return handleProductApproval(approvalAdminDTO, action,requestId);
+        } else if (operation.equals("category")) {
+            log.info("search category by admin, with requestId: {}", requestId);
+            return handleCategoryApproval(approvalAdminDTO, action,requestId);
+        } else {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Type incorrect");
+        }
+    }
+
+    private ResponseEntity<MessageResponse> handleProductApproval(ApprovalAdminDTO approvalAdminDTO, String action,String requestId) {
+        Product product = productRepository.findProductId(approvalAdminDTO.getId());
+        if (product != null) {
+            if (action.equals("approve")) {
+                log.info("approve product by admin, with requestId: {}", requestId);
+                product.setState(approvalAdminDTO.getAction());
+                productRepository.save(product);
+                log.info("Success product Approval, with requestId: {}", requestId);
+                return ResponseEntity.ok(new MessageResponse("Success Approval"));
+            } else if (action.equals("decline")) {
+                log.info("decline product by admin, with requestId: {}", requestId);
+                productRepository.delete(product);
+                log.info("Product deleted successfully, with requestId: {}", requestId);
+                return ResponseEntity.ok(new MessageResponse("Product deleted successfully"));
+            }
+            log.error("Invalid action. Action must be 'approve' or 'decline', with requestId: {}", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid action. Action must be 'approve' or 'decline'");
+        } else {
+            log.error("Product ID incorrect, please verify your information, with requestId: {}", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Product ID incorrect, please verify your information");
+        }
+    }
+    private ResponseEntity<MessageResponse> handleCategoryApproval(ApprovalAdminDTO approvalAdminDTO, String action, String requestId) {
+        Category category = categoryRepository.findCategoryId(approvalAdminDTO.getId());
+        if (category != null) {
+            if (action.equals("approve")) {
+                log.info("approve category by admin, with requestId: {}", requestId);
+                category.setState(approvalAdminDTO.getAction());
+                categoryRepository.save(category);
+                log.info("Success category Approval, with requestId: {}", requestId);
+                return ResponseEntity.ok(new MessageResponse("Success Approval"));
+            } else if (action.equals("decline")) {
+                log.info("decline category by admin, with requestId: {}", requestId);
+                categoryRepository.delete(category);
+                log.info("Category deleted successfully, with requestId: {}", requestId);
+                return ResponseEntity.ok(new MessageResponse("Category deleted successfully"));
+            }
+            log.error("Invalid action. Action must be 'approve' or 'decline', with requestId: {}", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid action. Action must be 'approve' or 'decline'");
+        } else {
+            log.error("Category ID incorrect, please verify your information, with requestId: {}", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Category ID incorrect, please verify your information");
+        }
+    }
+
+
+    @Override
+    public ResponseEntity<ApprovalJobs> viewApprovalJobs(String requestId) {
+        log.info("search status categories and products for approval jobs by admin, with requestId: {}", requestId);
+        List<Category> categories = categoryRepository.findAllCategoryOperations();
+        List<Product> products = productRepository.findAllProductsOperations();
+        List<JobsResponse> jobs = new ArrayList<>();
+        for (Category category : categories) {
+            jobs.add(new JobsResponse("category", category.getId(), category.getState()));
+        }
+        for (Product product : products) {
+            jobs.add(new JobsResponse("product", product.getId(), product.getState()));
+        }
+        log.info("return successful categories and products for approval jobs by admin, with requestId: {}", requestId);
+        return new ResponseEntity<>(new ApprovalJobs(jobs),HttpStatus.OK);
+    }
+    @Override
     public ResponseEntity<UsersList> viewUsers(String requestId) {
         List<User> users = userRepository.findAll();
         List<UserDTO> userDTOs = users.stream().map(this::mapToUserDTO).toList();
@@ -110,7 +186,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<Object> deleteUser(UsersDTO users, String requestId) {
+    public ResponseEntity<MessageResponse> deleteUser(UsersDTO users, String requestId) {
         List<String> deletedUsernames = new ArrayList<>();
         for (String username : users.getUsers()) {
             User user = userRepository.findElement(username);
@@ -124,9 +200,9 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         if (!deletedUsernames.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.OK).body(Map.of(MESSAGE, "Users deleted successfully " + deletedUsernames));
+            return new ResponseEntity<>(new MessageResponse("users deleted successfully"+ deletedUsernames),HttpStatus.OK);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("Message", "No users found for deletion."));
+            return new ResponseEntity<>(new MessageResponse("No users found for deletion."+ deletedUsernames),HttpStatus.NOT_FOUND);
         }
     }
 

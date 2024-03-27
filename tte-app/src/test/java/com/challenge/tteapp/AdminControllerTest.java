@@ -176,9 +176,9 @@ class AdminControllerTest {
         users.add("other");
         userResponse.setUsers(users);
 
-        ResponseEntity<Object> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        ResponseEntity<MessageResponse> successResponse = new ResponseEntity<>(new MessageResponse(), HttpStatus.CREATED);
         when(adminService.deleteUser(eq(userResponse), anyString())).thenReturn(successResponse);
-        ResponseEntity<Object> response = adminController.deleteUser(userResponse);
+        ResponseEntity<MessageResponse> response = adminController.deleteUser(userResponse);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
 
@@ -187,11 +187,11 @@ class AdminControllerTest {
         list.add(1);
         list.add(2);
         lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(list);
-        ResponseEntity<Object> response2 = adminServiceImpl.deleteUser(userResponse, "requestId");
+        ResponseEntity<MessageResponse> response2 = adminServiceImpl.deleteUser(userResponse, "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
 
         when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(null);
-        ResponseEntity<Object> response3 = adminServiceImpl.deleteUser(userResponse, "requestId");
+        ResponseEntity<MessageResponse> response3 = adminServiceImpl.deleteUser(userResponse, "requestId");
         assertEquals(HttpStatus.NOT_FOUND, response3.getStatusCode());
 
     }

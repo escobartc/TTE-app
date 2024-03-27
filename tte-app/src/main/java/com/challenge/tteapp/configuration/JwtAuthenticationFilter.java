@@ -80,7 +80,8 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     }
 
     private boolean isAuthorized(String role, String endpoint) {
-        if (endpoint.equals("/api/admin/auth") || endpoint.equals("/api/user") || endpoint.equals("/api/coupon")) {
+        if (endpoint.equals("/api/admin/auth") || endpoint.equals("/api/user") || endpoint.equals("/api/coupon")
+                || endpoint.equals("/api/jobs") || endpoint.equals("/api/reviewJob")) {
             return role.equals(ADMIN);
         } else if (endpoint.startsWith("/api/product") || endpoint.startsWith("/api/cart/checkout/review")
                 || endpoint.startsWith("/api/category")) {

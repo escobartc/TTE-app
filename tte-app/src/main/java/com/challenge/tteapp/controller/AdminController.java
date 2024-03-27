@@ -4,12 +4,14 @@ import com.challenge.tteapp.configuration.UserRoleContext;
 import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.admin.Admin;
 import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.dto.ApprovalAdminDTO;
 import com.challenge.tteapp.model.dto.CouponDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
 import com.challenge.tteapp.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +47,23 @@ public class AdminController {
         return adminService.register(userDTO, requestId);
     }
 
+    @PostMapping(path = "/reviewJob", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
+            MediaType.APPLICATION_JSON_VALUE })
+    public ResponseEntity<MessageResponse> approvalJobs(@RequestParam("type") String type, @RequestBody @Valid ApprovalAdminDTO approvalAdminDTO) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, creation user by admin, with requestId: [{}]", requestId);
+        return adminService.approvalJobs(approvalAdminDTO,type, requestId);
+    }
+
+
+    @GetMapping(path = "/jobs")
+    public ResponseEntity<ApprovalJobs> viewApprovalJobs() {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, view approval jobs by admin, with requestId: {}", requestId);
+        return adminService.viewApprovalJobs(requestId);
+    }
+
+
     @GetMapping(path = "/user")
     public ResponseEntity<UsersList> viewUser() {
         String requestId = UUID.randomUUID().toString();
@@ -60,7 +79,7 @@ public class AdminController {
     }
 
     @DeleteMapping(path = "/user")
-    public ResponseEntity<Object> deleteUser(@RequestBody UsersDTO users) {
+    public ResponseEntity<MessageResponse> deleteUser(@RequestBody UsersDTO users) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, delete user by admin, with requestId: {}", requestId);
         return adminService.deleteUser(users, requestId);
