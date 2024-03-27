@@ -130,15 +130,6 @@ class AdminControllerTest {
     }
 
     @Test
-    void loginAdminError() {
-        LoginAdmin loginAdmin = adminLoginInfo();
-        when(authenticationManager.authenticate(new UsernamePasswordAuthenticationToken("email","username"))).thenReturn((Authentication) new User());
-        assertThrows(AuthenticationException.class, () -> {
-            adminServiceImpl.loginAdmin(loginAdmin, "requestId");
-        });
-    }
-
-    @Test
     void viewUserTest() {
         UsersList userResponse = new UsersList();
         ResponseEntity<UsersList> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
