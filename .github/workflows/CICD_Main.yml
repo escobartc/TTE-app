@@ -81,7 +81,13 @@ jobs:
             # Stop and remove existing container (if any)
             sudo docker stop tteapp || true
             sudo docker rm tteapp || true
-
+            
+            # Get Docker login password for ECR
+            DOCKER_LOGIN_PASSWORD=$(aws ecr get-login-password --region ${{ secrets.AWS_REGION }})
+            
+            # Log in to Docker with the retrieved password
+            echo $DOCKER_LOGIN_PASSWORD | sudo docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.your-region.amazonaws.com
+            
             # Pull the latest image from ECR
             sudo docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/tteapp:${{ github.sha }}
             
