@@ -1,1 +1,1 @@
-sonar.coverage.exclusions= src/main/java/com/challenge/tteapp/model
+sonar.coverage.exclusions= src/main/java/com/challenge/tteapp/model/**
