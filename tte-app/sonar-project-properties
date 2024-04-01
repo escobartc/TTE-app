@@ -1,0 +1,1 @@
+sonar.coverage.exclusions= src/main/java/com/challenge/tteapp/service/impl/ProductServiceImp.java
