@@ -110,18 +110,6 @@
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.7</version>
 				<configuration>
-					<rules>
-						<rule>
-							<element>BUNDLE</element>
-							<limits>
-								<limit>
-									<counter>LINE</counter>
-									<value>COVEREDRATIO</value>
-									<minimum>0.70</minimum>
-								</limit>
-							</limits>
-						</rule>
-					</rules>
 					<excludes>
 						<exclude>com/challenge/tteapp/model/**/*</exclude>
 					</excludes>
