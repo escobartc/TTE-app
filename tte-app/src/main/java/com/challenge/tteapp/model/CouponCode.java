@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class CouponCode {
-@JsonProperty("coupon_code")
-private String couponCode;
+    @JsonProperty("coupon_code")
+    private String couponCod;
 
 }

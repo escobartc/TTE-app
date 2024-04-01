@@ -9,9 +9,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+
 @Repository
 @SuppressWarnings("SqlNoDataSourceInspection")
-public interface WishListRepository extends JpaRepository<WishList,Long> {
+public interface WishListRepository extends JpaRepository<WishList, Long> {
 
     @Query("SELECT w.articleId FROM WishList w WHERE w.user = :userId")
     List<Integer> findArticleIdsByUserId(@Param("userId") Long userId);
@@ -20,6 +21,7 @@ public interface WishListRepository extends JpaRepository<WishList,Long> {
     @Modifying
     @Query("DELETE FROM WishList w WHERE w.user = :userId AND w.articleId = :articleId")
     void deleteByUserIdAndArticleId(@Param("userId") Long userId, @Param("articleId") Integer articleId);
+
     @Transactional
     @Modifying
     @Query(value = "INSERT INTO wishlist (user_id, product_id) VALUES (:userId, :articleId)", nativeQuery = true)

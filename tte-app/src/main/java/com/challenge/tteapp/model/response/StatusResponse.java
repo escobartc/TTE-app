@@ -1,6 +1,8 @@
-package com.challenge.tteapp.model;
+package com.challenge.tteapp.model.response;
+
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,10 +10,8 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponse {
-
-    private String token;
-    private String email;
-    private String username;
+public class StatusResponse {
+    private String status;
 }

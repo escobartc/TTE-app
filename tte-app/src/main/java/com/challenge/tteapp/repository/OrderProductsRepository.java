@@ -8,9 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface OrderProductsRepository extends JpaRepository<OrderProducts,Long> {
-
-
+public interface OrderProductsRepository extends JpaRepository<OrderProducts, Long> {
     @Query("SELECT o FROM OrderProducts o WHERE o.orderId = :idOrder")
     List<OrderProducts> findAllOrderProducts(@Param("idOrder") Long idOrder);
 }

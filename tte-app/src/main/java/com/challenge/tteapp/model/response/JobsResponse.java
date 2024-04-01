@@ -1,4 +1,4 @@
-package com.challenge.tteapp.model;
+package com.challenge.tteapp.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

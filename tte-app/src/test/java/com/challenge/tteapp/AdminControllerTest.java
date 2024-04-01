@@ -2,16 +2,17 @@ package com.challenge.tteapp;
 
 import com.challenge.tteapp.controller.AdminController;
 import com.challenge.tteapp.model.*;
-import com.challenge.tteapp.model.admin.Admin;
-import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.Admin;
+import com.challenge.tteapp.model.LoginAdmin;
+import com.challenge.tteapp.model.dto.ApprovalAdminDTO;
 import com.challenge.tteapp.model.dto.CouponDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
+import com.challenge.tteapp.model.dto.UsersDTO;
+import com.challenge.tteapp.model.response.*;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
-import com.challenge.tteapp.repository.CouponRepository;
-import com.challenge.tteapp.repository.UserRepository;
-import com.challenge.tteapp.repository.WishListRepository;
+import com.challenge.tteapp.repository.*;
 import com.challenge.tteapp.service.AdminService;
 import com.challenge.tteapp.service.ProductService;
 import com.challenge.tteapp.service.impl.AdminServiceImpl;
@@ -21,19 +22,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,6 +48,10 @@ class AdminControllerTest {
     private CouponRepository couponRepository;
     @Mock
     private WishListRepository wishListRepository;
+    @Mock
+    private CategoryRepository categoryRepository;
+    @Mock
+    private ProductRepository productRepository;
     @InjectMocks
     private AdminController adminController;
     @Mock
@@ -87,6 +85,136 @@ class AdminControllerTest {
         ResponseEntity<UserResponse> response2 = adminServiceImpl.registerAdmin(admin, "requestId");
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
     }
+
+    @Test
+    void viewApprovalJobsTest() {
+        ApprovalJobsResponse approvalJobsResponse = new ApprovalJobsResponse();
+
+        ResponseEntity<ApprovalJobsResponse> successResponse = new ResponseEntity<>(approvalJobsResponse, HttpStatus.CREATED);
+
+        when(adminService.viewApprovalJobs(anyString())).thenReturn(successResponse);
+
+        ResponseEntity<ApprovalJobsResponse> response = adminController.viewApprovalJobs();
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+
+        Category category = new Category();
+        category.setName("name");
+        List<Category> categories = new ArrayList<>();
+        categories.add(category);
+
+        Product product = new Product();
+        product.setState("approved");
+        List<Product> products = new ArrayList<>();
+        products.add(product);
+
+        when(categoryRepository.findAllCategoryOperations()).thenReturn(categories);
+        when(productRepository.findAllProductsOperations()).thenReturn(products);
+
+        ResponseEntity<ApprovalJobsResponse> response2 = adminServiceImpl.viewApprovalJobs("requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+
+    @Test
+    void approvalJobsTest() {
+        testSuccessfulApproval();
+        testPendingProductAndCategory();
+        testDeclinedProductAndCategory();
+        testInvalidAction();
+        testInvalidActionWithNullId();
+    }
+
+    private void testSuccessfulApproval() {
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("approve");
+        ResponseEntity<MessageResponse> successResponse = prepareSuccessResponse();
+
+        when(adminService.approvalJobs(eq(approvalAdminDTO), eq("approve"), anyString()))
+                .thenReturn(successResponse);
+
+        ResponseEntity<MessageResponse> response = adminController.approvalJobs("approve", approvalAdminDTO);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
+
+    private void testPendingProductAndCategory() {
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("approve");
+
+        Product product = preparePendingProduct();
+        Category category = preparePendingCategory();
+
+        lenient().when(productRepository.findProductId(anyLong())).thenReturn(product);
+        lenient().when(categoryRepository.findCategoryId(anyLong())).thenReturn(category);
+
+        ResponseEntity<MessageResponse> response1 = adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
+        assertEquals(HttpStatus.OK, response1.getStatusCode());
+
+        ResponseEntity<MessageResponse> response2 = adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+
+    private void testDeclinedProductAndCategory() {
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("decline");
+
+        ResponseEntity<MessageResponse> response1 = adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
+        assertEquals(HttpStatus.OK, response1.getStatusCode());
+
+        ResponseEntity<MessageResponse> response2 = adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+
+    private void testInvalidAction() {
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("other");
+
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
+        });
+
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
+        });
+
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.approvalJobs(approvalAdminDTO, "approve", "requestId");
+        });
+    }
+
+    private void testInvalidActionWithNullId() {
+        ApprovalAdminDTO approvalAdminDTO = new ApprovalAdminDTO();
+        approvalAdminDTO.setAction("approve");
+
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
+        });
+
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
+        });
+    }
+
+    private ApprovalAdminDTO prepareApprovalDTO(String action) {
+        ApprovalAdminDTO approvalAdminDTO = new ApprovalAdminDTO();
+        approvalAdminDTO.setAction(action);
+        approvalAdminDTO.setId(0L);
+        return approvalAdminDTO;
+    }
+
+    private ResponseEntity<MessageResponse> prepareSuccessResponse() {
+        MessageResponse messageResponse = new MessageResponse();
+        return new ResponseEntity<>(messageResponse, HttpStatus.CREATED);
+    }
+
+    private Product preparePendingProduct() {
+        Product product = new Product();
+        product.setState("pending");
+        return product;
+    }
+
+    private Category preparePendingCategory() {
+        Category category = new Category();
+        category.setState("pending");
+        return category;
+    }
+
 
     @Test
     void RegisterUser() {
@@ -131,16 +259,16 @@ class AdminControllerTest {
 
     @Test
     void viewUserTest() {
-        UsersList userResponse = new UsersList();
-        ResponseEntity<UsersList> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        UsersListResponse userResponse = new UsersListResponse();
+        ResponseEntity<UsersListResponse> successResponse = new ResponseEntity<>(userResponse, HttpStatus.CREATED);
         when(adminService.viewUsers(anyString())).thenReturn(successResponse);
-        ResponseEntity<UsersList> response = adminController.viewUser();
+        ResponseEntity<UsersListResponse> response = adminController.viewUser();
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         UserRepository userRepositoryMock = mock(UserRepository.class);
         List<User> users = new ArrayList<>();
         users.add(new User());
         users.add(new User());
-        ResponseEntity<UsersList> response2 = adminServiceImpl.viewUsers("requestId");
+        ResponseEntity<UsersListResponse> response2 = adminServiceImpl.viewUsers("requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
         User user = new User();
         user.setState(1);
@@ -165,7 +293,6 @@ class AdminControllerTest {
         assertThrows(HttpClientErrorException.class, () -> {
             adminServiceImpl.userUpdate(userResponse, "requestId");
         });
-
     }
 
     @Test
@@ -222,20 +349,20 @@ class AdminControllerTest {
         couponDTO.setDiscountPercentage(21);
 
         ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
-        lenient().when(adminService.createCoupon(eq(couponDTO), anyString(),anyString())).thenReturn(successResponse);
+        lenient().when(adminService.createCoupon(eq(couponDTO), anyString(), anyString())).thenReturn(successResponse);
         adminController.createCoupon(couponDTO);
         lenient().when(couponRepository.findNameCoupon()).thenReturn(new ArrayList<>());
-        adminServiceImpl.createCoupon(couponDTO,"email" ,"requestId");
+        adminServiceImpl.createCoupon(couponDTO, "email", "requestId");
         List<String> coupons = new ArrayList<>();
         coupons.add("CuouponTest");
         lenient().when(couponRepository.findNameCoupon()).thenReturn(coupons);
         assertThrows(HttpClientErrorException.class, () -> {
-            adminServiceImpl.createCoupon(couponDTO,"email", "requestId");
+            adminServiceImpl.createCoupon(couponDTO, "email", "requestId");
         });
     }
 
     @Test
-    void viewCoupons(){
+    void viewCoupons() {
         ResponseEntity<List<Coupon>> successResponse = new ResponseEntity<>(new ArrayList<>(), HttpStatus.CREATED);
         lenient().when(adminService.viewAllCoupon(anyString())).thenReturn(successResponse);
         adminController.viewAllCoupon();
@@ -244,18 +371,18 @@ class AdminControllerTest {
     }
 
     @Test
-    void deleteCoupons(){
+    void deleteCoupons() {
         CouponDelete couponDelete = new CouponDelete();
         couponDelete.setName("name");
         ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
         lenient().when(adminService.deleteCoupon(eq(couponDelete), anyString())).thenReturn(successResponse);
         adminController.deleteCoupon(couponDelete);
         lenient().when(couponRepository.findCoupon(anyString())).thenReturn(new Coupon());
-        adminServiceImpl.deleteCoupon(couponDelete,"requestId");
+        adminServiceImpl.deleteCoupon(couponDelete, "requestId");
     }
 
     @Test
-    void deleteCouponError(){
+    void deleteCouponError() {
         CouponDelete couponDelete = new CouponDelete();
         couponDelete.setName("name");
         assertThrows(HttpClientErrorException.class, () -> {

@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface OrdersRepository extends JpaRepository<Orders,Long> {
+public interface OrdersRepository extends JpaRepository<Orders, Long> {
 
     @Query("SELECT o FROM Orders o WHERE o.user = :userId AND o.orderStatus = :status")
     Orders findOrders(@Param("userId") Long userId, @Param("status") String status);

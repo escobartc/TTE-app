@@ -1,15 +1,17 @@
-package com.challenge.tteapp.model;
+package com.challenge.tteapp.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MessageResponse {
+public class ApprovalJobsResponse {
 
-    private String message;
+    private List<JobsResponse> jobsResponseList;
 }
