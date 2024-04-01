@@ -221,7 +221,6 @@ class UserControllerTest {
         assertEquals("username",userResponse.getUsername());
         assertEquals("role",userResponse.getRole());
         assertEquals("id",userResponse.getId());
-
     }
     @Test
     void addCouponTest2() {
