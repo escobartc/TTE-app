@@ -367,7 +367,9 @@ class AdminControllerTest {
         lenient().when(adminService.viewAllCoupon(anyString())).thenReturn(successResponse);
         adminController.viewAllCoupon();
         lenient().when(couponRepository.findAll()).thenReturn(new ArrayList<>());
-        adminServiceImpl.viewAllCoupon("requestId");
+        ResponseEntity<List<Coupon>> response = adminServiceImpl.viewAllCoupon("requestId");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
     }
 
     @Test
@@ -378,7 +380,9 @@ class AdminControllerTest {
         lenient().when(adminService.deleteCoupon(eq(couponDelete), anyString())).thenReturn(successResponse);
         adminController.deleteCoupon(couponDelete);
         lenient().when(couponRepository.findCoupon(anyString())).thenReturn(new Coupon());
-        adminServiceImpl.deleteCoupon(couponDelete, "requestId");
+        ResponseEntity<StatusResponse> response =adminServiceImpl.deleteCoupon(couponDelete, "requestId");
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+
     }
 
     @Test

@@ -5,7 +5,6 @@ import com.challenge.tteapp.model.response.AllCategoriesResponse;
 import com.challenge.tteapp.model.response.CategoryResponse;
 import com.challenge.tteapp.model.response.MessageResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Map;

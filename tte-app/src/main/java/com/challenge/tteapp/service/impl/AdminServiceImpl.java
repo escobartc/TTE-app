@@ -230,7 +230,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<List<Coupon>> viewAllCoupon(String requestId) {
         log.info("view All coupon, requestId: [{}]", requestId);
-        return new ResponseEntity<>(couponRepository.findAll(), HttpStatus.CREATED);
+        return new ResponseEntity<>(couponRepository.findAll(), HttpStatus.OK);
     }
 
     @Override
