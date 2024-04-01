@@ -17,5 +17,8 @@ server:
 data:
   secretKey: ${SECRET_KEY}
   pathStore: ${PATH_STORE}
+springdoc:
+  api-docs:
+    path: /api-documentation
 
 

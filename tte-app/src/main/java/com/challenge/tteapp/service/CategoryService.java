@@ -1,16 +1,18 @@
 package com.challenge.tteapp.service;
 
 import com.challenge.tteapp.model.dto.CategoryDTO;
+import com.challenge.tteapp.model.response.AllCategoriesResponse;
+import com.challenge.tteapp.model.response.CategoryResponse;
+import com.challenge.tteapp.model.response.MessageResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Map;
 
 public interface CategoryService {
-    List<CategoryDTO> getAllCategories();
+    ResponseEntity<List<AllCategoriesResponse>> getAllCategories(String requestId);
 
-    ResponseEntity<Object> saveCategory(CategoryDTO categoryDTO, String requestId);
+    ResponseEntity<CategoryResponse> createCategory(CategoryDTO categoryDTO, String role, String requestId);
 
-    ResponseEntity<Object> deleteCategory(Map<String, Long> requestBody, Authentication authentication);
+    ResponseEntity<MessageResponse> deleteCategory(Map<String, Long> requestBody, String role,String requestId);
 }

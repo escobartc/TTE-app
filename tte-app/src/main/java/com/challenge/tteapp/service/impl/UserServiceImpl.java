@@ -2,13 +2,13 @@ package com.challenge.tteapp.service.impl;
 
 import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.dto.*;
+import com.challenge.tteapp.model.response.*;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.repository.*;
 import com.challenge.tteapp.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -125,7 +125,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findElement(email);
         List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
         WishListResponse wishListResponse = new WishListResponse();
-        wishListResponse.setUser_id(user.getId().toString());
+        wishListResponse.setUserId(user.getId().toString());
         wishListResponse.setWishlist(wishList);
         log.info("Retriever list successful, requestId: [{}]", requestId);
         return new ResponseEntity<>(wishListResponse, HttpStatus.OK);
@@ -208,7 +208,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findElement(email);
         List<Products> productsList = buildProducts(user);
         CartResponse cartResponse = new CartResponse();
-        cartResponse.setUser_id(user.getId().toString());
+        cartResponse.setUserId(user.getId().toString());
         cartResponse.setProducts(productsList);
         log.info("Retriever cart list successful, requestId: [{}]", requestId);
         return new ResponseEntity<>(cartResponse, HttpStatus.OK);
@@ -227,13 +227,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<CartBeforeCheck> addCoupon(CouponCode couponCode, String email, String requestId) {
+    public ResponseEntity<CartBeforeCheckResponse> addCoupon(CouponCode couponCode, String email, String requestId) {
         log.info("Add coupon to cart: {} , requestId: [{}]", requestId, email);
         User user = userRepository.findElement(email);
         Coupon coupon = null;
-
-        if (!couponCode.getCouponCode().isEmpty()) {
-            coupon = couponRepository.findCoupon(couponCode.getCouponCode());
+        if (!couponCode.getCouponCod().isEmpty()) {
+            coupon = couponRepository.findCoupon(couponCode.getCouponCod());
             if (coupon == null || coupon.getUseCoupon().equals(true)) {
                 log.warn("Coupon does not exist or was used, please verify your information: {} , requestId: [{}]"
                         , requestId, email);
@@ -242,7 +241,7 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        if (couponCode.getCouponCode().isEmpty()) {
+        if (couponCode.getCouponCod().isEmpty()) {
             Long cartCouponId = ordersRepository.findCouponId(user.getId());
             if (cartCouponId != null) {
                 couponRepository.updateCouponState(cartCouponId, Boolean.FALSE);
@@ -252,8 +251,8 @@ public class UserServiceImpl implements UserService {
         buildOrder(Optional.ofNullable(coupon), user);
         log.info("Coupon successfully added: {} , requestId: [{}]", requestId, email);
 
-        CartBeforeCheck cartBeforeCheck = buildResponseCheckout(user, Optional.ofNullable(coupon));
-        return new ResponseEntity<>(cartBeforeCheck, HttpStatus.OK);
+        CartBeforeCheckResponse cartBeforeCheckResponse = buildResponseCheckout(user, Optional.ofNullable(coupon));
+        return new ResponseEntity<>(cartBeforeCheckResponse, HttpStatus.OK);
     }
 
     @Override
@@ -262,7 +261,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findElement(email);
 
         Orders orders = ordersRepository.findOrders(user.getId(), "CREATED");
-        if(orders!=null && orders.getOrderStatus().equals(CREATED)){
+        if (orders != null && orders.getOrderStatus().equals(CREATED)) {
             couponRepository.updateCouponState(orders.getCouponId(), Boolean.TRUE);
             List<Products> productsList = buildProducts(user);
             for (Products product : productsList) {
@@ -274,44 +273,49 @@ public class UserServiceImpl implements UserService {
             }
             orders.setOrderStatus("ACCEPTED");
             ordersRepository.save(orders);
-        }else{
+        } else {
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "not orders found," +
                     " please verify your information");
         }
         cartRepository.deleteElementsByUserId(user.getId());
-        return new ResponseEntity<>(new MessageResponse("thanks " +user.getUsername()+ " for your purchase"), HttpStatus.OK);
+        return new ResponseEntity<>(new MessageResponse("thanks " + user.getUsername() + " for your purchase"), HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<List<CartcheckoutReview>> cartCheckoutReview(String email, String requestId) {
+    public ResponseEntity<List<CartCheckoutResponse>> cartCheckoutReview(String email, String requestId) {
         log.info("cart checkout review: {} , requestId: [{}]", requestId, email);
 
         List<Orders> orders = ordersRepository.findAllOrders();
-        List<CartcheckoutReview> response = new ArrayList<>();
+        List<CartCheckoutResponse> response = new ArrayList<>();
 
         for (Orders order : orders) {
             List<OrderProducts> orderProducts = orderProductsRepository.findAllOrderProducts(order.getId());
-            CartcheckoutReview cartcheckoutReview = new CartcheckoutReview();
-            cartcheckoutReview.setUserId(order.getUser());
-            cartcheckoutReview.setOrderId(order.getId());
-            cartcheckoutReview.setStatus(order.getOrderStatus());
-
-            List<Products> productsList = new ArrayList<>();
-            for (OrderProducts orderProduct : orderProducts) {
-                Products product = new Products();
-                product.setProductId(orderProduct.getProductId());
-                product.setQuantity(orderProduct.getQuantity());
-                productsList.add(product);
-            }
-            cartcheckoutReview.setProducts(productsList);
-            response.add(cartcheckoutReview);
+            CartCheckoutResponse cartcheckoutResponse = getCartCheckoutResponse(order, orderProducts);
+            response.add(cartcheckoutResponse);
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    private static CartCheckoutResponse getCartCheckoutResponse(Orders order, List<OrderProducts> orderProducts) {
+        CartCheckoutResponse cartcheckoutResponse = new CartCheckoutResponse();
+        cartcheckoutResponse.setUserId(order.getUser());
+        cartcheckoutResponse.setOrderId(order.getId());
+        cartcheckoutResponse.setStatus(order.getOrderStatus());
+
+        List<Products> productsList = new ArrayList<>();
+        for (OrderProducts orderProduct : orderProducts) {
+            Products product = new Products();
+            product.setProductId(orderProduct.getProductId());
+            product.setQuantity(orderProduct.getQuantity());
+            productsList.add(product);
+        }
+        cartcheckoutResponse.setProducts(productsList);
+        return cartcheckoutResponse;
+    }
+
     @Override
-    public ResponseEntity<Object> cartCheckoutUpdateState(UpdateStatusOrderDTO updateStatusOrderDTO, String requestId) {
+    public ResponseEntity<MessageResponse> cartCheckoutUpdateState(UpdateStatusOrderDTO updateStatusOrderDTO, String requestId) {
         log.info("update order, requestId: [{}]", requestId);
         Orders order = ordersRepository.findOrdersId(updateStatusOrderDTO.getIdOrder());
         if (order != null) {
@@ -327,7 +331,6 @@ public class UserServiceImpl implements UserService {
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Order does not exist");
         }
     }
-
 
 
     private void buildOrder(Optional<Coupon> coupon, User user) {
@@ -353,12 +356,12 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private CartBeforeCheck buildResponseCheckout(User user, Optional<Coupon> coupon) {
-        CartBeforeCheck cartBeforeCheck = new CartBeforeCheck();
-        cartBeforeCheck.setUserId(user.getId().toString());
+    private CartBeforeCheckResponse buildResponseCheckout(User user, Optional<Coupon> coupon) {
+        CartBeforeCheckResponse cartBeforeCheckResponse = new CartBeforeCheckResponse();
+        cartBeforeCheckResponse.setUserId(user.getId().toString());
 
         List<Products> productsList = buildProducts(user);
-        cartBeforeCheck.setShoppingCart(productsList);
+        cartBeforeCheckResponse.setShoppingCart(productsList);
 
         double totalBeforeDiscount = 0.0;
 
@@ -376,16 +379,16 @@ public class UserServiceImpl implements UserService {
 
         double finalTotal = totalAfterDiscount + 19.99;
 
-        cartBeforeCheck.setTotalBeforeDiscount(totalBeforeDiscount);
-        cartBeforeCheck.setTotalAfterDiscount(totalAfterDiscount);
-        cartBeforeCheck.setShippingCost(19.99);
-        cartBeforeCheck.setFinalTotal(finalTotal);
+        cartBeforeCheckResponse.setTotalBeforeDiscount(totalBeforeDiscount);
+        cartBeforeCheckResponse.setTotalAfterDiscount(totalAfterDiscount);
+        cartBeforeCheckResponse.setShippingCost(19.99);
+        cartBeforeCheckResponse.setFinalTotal(finalTotal);
 
         CouponDTO couponApplied = new CouponDTO();
         couponApplied.setDiscountPercentage(coupon.map(Coupon::getDiscountPercentage).orElse(0));
         couponApplied.setCouponCode(coupon.map(Coupon::getCouponCode).orElse(null));
-        cartBeforeCheck.setCouponApplied(couponApplied);
-        return cartBeforeCheck;
+        cartBeforeCheckResponse.setCouponApplied(couponApplied);
+        return cartBeforeCheckResponse;
     }
 
 }

@@ -1,5 +1,6 @@
-package com.challenge.tteapp.model;
+package com.challenge.tteapp.model.response;
 
+import com.challenge.tteapp.model.Products;
 import com.challenge.tteapp.model.dto.CouponDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import java.util.List;
 
 @Setter
 @Getter
-public class CartBeforeCheck {
+public class CartBeforeCheckResponse {
     @JsonProperty("user_id")
     private String userId;
     @JsonProperty("shopping_cart")

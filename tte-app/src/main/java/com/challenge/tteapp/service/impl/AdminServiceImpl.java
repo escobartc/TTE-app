@@ -1,13 +1,14 @@
 package com.challenge.tteapp.service.impl;
 
 import com.challenge.tteapp.model.*;
-import com.challenge.tteapp.model.admin.Admin;
-import com.challenge.tteapp.model.admin.LoginAdmin;
+import com.challenge.tteapp.model.Admin;
+import com.challenge.tteapp.model.LoginAdmin;
 import com.challenge.tteapp.model.dto.ApprovalAdminDTO;
 import com.challenge.tteapp.model.dto.CouponDTO;
 import com.challenge.tteapp.model.dto.UserDTO;
+import com.challenge.tteapp.model.dto.UsersDTO;
+import com.challenge.tteapp.model.response.*;
 import com.challenge.tteapp.processor.JwtService;
-import com.challenge.tteapp.processor.ValidationError;
 import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.repository.*;
 import com.challenge.tteapp.service.AdminService;
@@ -25,8 +26,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
-
-import static com.challenge.tteapp.model.Constants.MESSAGE;
 
 @AllArgsConstructor
 @Service
@@ -53,6 +52,7 @@ public class AdminServiceImpl implements AdminService {
         User user = buildUser(userDTO);
         return validationInfo(user, requestId);
     }
+
     @Override
     public ResponseEntity<UserResponse> registerAdmin(Admin admin, String requestId) {
         User user = new User();
@@ -62,6 +62,7 @@ public class AdminServiceImpl implements AdminService {
         user.setState(0);
         return validationInfo(user, requestId);
     }
+
     @Override
     public ResponseEntity<TokenRequest> loginAdmin(LoginAdmin admin, String requestId) {
         try {
@@ -86,16 +87,16 @@ public class AdminServiceImpl implements AdminService {
         String action = approvalAdminDTO.getAction();
         if (operation.equals("product")) {
             log.info("search product by admin, with requestId: {}", requestId);
-            return handleProductApproval(approvalAdminDTO, action,requestId);
+            return handleProductApproval(approvalAdminDTO, action, requestId);
         } else if (operation.equals("category")) {
             log.info("search category by admin, with requestId: {}", requestId);
-            return handleCategoryApproval(approvalAdminDTO, action,requestId);
+            return handleCategoryApproval(approvalAdminDTO, action, requestId);
         } else {
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Type incorrect");
         }
     }
 
-    private ResponseEntity<MessageResponse> handleProductApproval(ApprovalAdminDTO approvalAdminDTO, String action,String requestId) {
+    private ResponseEntity<MessageResponse> handleProductApproval(ApprovalAdminDTO approvalAdminDTO, String action, String requestId) {
         Product product = productRepository.findProductId(approvalAdminDTO.getId());
         if (product != null) {
             if (action.equals("approve")) {
@@ -117,6 +118,7 @@ public class AdminServiceImpl implements AdminService {
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Product ID incorrect, please verify your information");
         }
     }
+
     private ResponseEntity<MessageResponse> handleCategoryApproval(ApprovalAdminDTO approvalAdminDTO, String action, String requestId) {
         Category category = categoryRepository.findCategoryId(approvalAdminDTO.getId());
         if (category != null) {
@@ -142,7 +144,7 @@ public class AdminServiceImpl implements AdminService {
 
 
     @Override
-    public ResponseEntity<ApprovalJobs> viewApprovalJobs(String requestId) {
+    public ResponseEntity<ApprovalJobsResponse> viewApprovalJobs(String requestId) {
         log.info("search status categories and products for approval jobs by admin, with requestId: {}", requestId);
         List<Category> categories = categoryRepository.findAllCategoryOperations();
         List<Product> products = productRepository.findAllProductsOperations();
@@ -154,15 +156,16 @@ public class AdminServiceImpl implements AdminService {
             jobs.add(new JobsResponse("product", product.getId(), product.getState()));
         }
         log.info("return successful categories and products for approval jobs by admin, with requestId: {}", requestId);
-        return new ResponseEntity<>(new ApprovalJobs(jobs),HttpStatus.OK);
+        return new ResponseEntity<>(new ApprovalJobsResponse(jobs), HttpStatus.OK);
     }
+
     @Override
-    public ResponseEntity<UsersList> viewUsers(String requestId) {
+    public ResponseEntity<UsersListResponse> viewUsers(String requestId) {
         List<User> users = userRepository.findAll();
         List<UserDTO> userDTOs = users.stream().map(this::mapToUserDTO).toList();
-        UsersList usersList = new UsersList();
-        usersList.setUsers(userDTOs);
-        return ResponseEntity.ok(usersList);
+        UsersListResponse usersListResponse = new UsersListResponse();
+        usersListResponse.setUsers(userDTOs);
+        return ResponseEntity.ok(usersListResponse);
     }
 
     @Override
@@ -200,9 +203,9 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         if (!deletedUsernames.isEmpty()) {
-            return new ResponseEntity<>(new MessageResponse("users deleted successfully"+ deletedUsernames),HttpStatus.OK);
+            return new ResponseEntity<>(new MessageResponse("users deleted successfully" + deletedUsernames), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(new MessageResponse("No users found for deletion."+ deletedUsernames),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new MessageResponse("No users found for deletion." + deletedUsernames), HttpStatus.NOT_FOUND);
         }
     }
 
@@ -227,7 +230,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<List<Coupon>> viewAllCoupon(String requestId) {
         log.info("view All coupon, requestId: [{}]", requestId);
-        return new ResponseEntity<>(couponRepository.findAll(), HttpStatus.CREATED);
+        return new ResponseEntity<>(couponRepository.findAll(), HttpStatus.OK);
     }
 
     @Override
@@ -252,7 +255,7 @@ public class AdminServiceImpl implements AdminService {
             return validationResponse.createDuplicateResponse("Username", requestId);
         }
         userRepository.save(user);
-        return new ResponseEntity<>(createUserResponse(user,requestId), HttpStatus.CREATED);
+        return new ResponseEntity<>(createUserResponse(user, requestId), HttpStatus.CREATED);
     }
 
     private UserResponse createUserResponse(User user, String requestId) {

@@ -32,6 +32,7 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui/**"
     };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -44,11 +45,11 @@ public class SecurityConfig {
                                 .requestMatchers("/api/auth").permitAll()
                                 .requestMatchers("/api/login").permitAll()
                                 .requestMatchers("/api/logout").permitAll()
-                                .requestMatchers(HttpMethod.GET,"/api/category").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/category").permitAll()
                                 .requestMatchers(AUTH_WHITELIST).permitAll()
                                 .anyRequest().authenticated()
                 )
-                .sessionManagement(sessionManager->
+                .sessionManagement(sessionManager ->
                         sessionManager
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)

@@ -1,8 +1,6 @@
 package com.challenge.tteapp.configuration;
 
 import com.challenge.tteapp.processor.JwtService;
-import com.challenge.tteapp.processor.ValidationError;
-import com.challenge.tteapp.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,12 +25,10 @@ import static com.challenge.tteapp.model.Constants.*;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter  extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final ValidationError validationError;
-    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -42,37 +38,37 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
         final String role;
         final String endpoint;
         try {
-        if (token == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        email = jwtService.getUsernameFromToken(token);
-        role = jwtService.getRoleFromToken(token);
-        endpoint = request.getRequestURI();
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            if (jwtService.isTokenValid(token, userDetails)) {
-                if (isAuthorized(role,endpoint)) {
-                    UserRoleContext.setRole(role);
-                    UserRoleContext.setName(email);
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                } else {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    String jsonResponse = "{\"error\": \"Access denied\"}";
-                    response.getWriter().write(jsonResponse);
-                    return;
+            if (token == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            email = jwtService.getUsernameFromToken(token);
+            role = jwtService.getRoleFromToken(token);
+            endpoint = request.getRequestURI();
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                if (jwtService.isTokenValid(token, userDetails)) {
+                    if (isAuthorized(role, endpoint)) {
+                        InfoToken.setRole(role);
+                        InfoToken.setName(email);
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities());
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        String jsonResponse = "{\"error\": \"Access denied\"}";
+                        response.getWriter().write(jsonResponse);
+                        return;
+                    }
                 }
             }
-        }
-        filterChain.doFilter(request, response);
-        UserRoleContext.clear();
-    }catch (ExpiredJwtException e){
+            filterChain.doFilter(request, response);
+            InfoToken.clear();
+        } catch (ExpiredJwtException e) {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write("{\"error\": \"Token expired\"}");
@@ -90,9 +86,9 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
             return role.equals(CUSTOMER);
         } else if (endpoint.startsWith("/api/user/wishlist") || endpoint.startsWith("/api/user/wishlist/add")
                 || endpoint.startsWith("/api/cart") || endpoint.startsWith("/api/cart/add")
-                || endpoint.startsWith("/cart/checkout") ){
+                || endpoint.startsWith("/cart/checkout")) {
             return role.equals(CUSTOMER);
-        }else {
+        } else {
             return false;
         }
     }

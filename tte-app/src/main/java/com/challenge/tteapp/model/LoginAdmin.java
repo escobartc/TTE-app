@@ -1,4 +1,4 @@
-package com.challenge.tteapp.model.admin;
+package com.challenge.tteapp.model;
 
 
 import jakarta.validation.constraints.Email;
