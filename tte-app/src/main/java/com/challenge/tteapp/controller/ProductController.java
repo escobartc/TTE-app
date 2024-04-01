@@ -153,12 +153,13 @@ public class ProductController {
     public ResponseEntity<Page<ProductDTO>> getProductsWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "") String orderBy,
-            Pageable pageable) {
-        pageable = PageRequest.of(page, size);
-        Page<ProductDTO> products = productService.getAllProductsWithOrder(orderBy, pageable);
+            @RequestParam(defaultValue = "") String orderBy) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<ProductDTO> products = productService.getAllProductsWithOrder(orderBy, pageRequest);
+
         return ResponseEntity.ok(products);
     }
+
 
     private static Product setProductFieldsForUpdate(ProductDTO productDTO, Product existingProduct) {
 
