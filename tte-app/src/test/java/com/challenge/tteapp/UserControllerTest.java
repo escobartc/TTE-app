@@ -209,6 +209,20 @@ class UserControllerTest {
         ResponseEntity<CartBeforeCheckResponse> response3 = userServiceimpl.addCoupon(couponCode,"email", "requestId");
         assertEquals(HttpStatus.OK, response3.getStatusCode());
     }
+
+    @Test
+    void UserResponseTest(){
+        UserResponse userResponse = new UserResponse();
+        userResponse.setEmail("email");
+        userResponse.setUsername("username");
+        userResponse.setRole("role");
+        userResponse.setId("id");
+        assertEquals("email",userResponse.getEmail());
+        assertEquals("username",userResponse.getUsername());
+        assertEquals("role",userResponse.getRole());
+        assertEquals("id",userResponse.getId());
+
+    }
     @Test
     void addCouponTest2() {
         User user = userInfo();
