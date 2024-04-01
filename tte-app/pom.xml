@@ -112,7 +112,7 @@
 				<configuration>
 					<excludes>
 						<exclude>com/challenge/tteapp/service/impl/ProductServiceImp.class</exclude>
-						<exclude>src/main/java/com/challenge/tteapp/model</exclude>
+						<exclude>src/main/java/com/chgit allenge/tteapp/model/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
