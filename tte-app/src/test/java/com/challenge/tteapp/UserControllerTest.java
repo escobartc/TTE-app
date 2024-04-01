@@ -2,10 +2,7 @@ package com.challenge.tteapp;
 
 import com.challenge.tteapp.controller.UserController;
 import com.challenge.tteapp.model.*;
-import com.challenge.tteapp.model.dto.CartDTO;
-import com.challenge.tteapp.model.dto.ShopperDTO;
-import com.challenge.tteapp.model.dto.UpdateStatusOrderDTO;
-import com.challenge.tteapp.model.dto.WishListDTO;
+import com.challenge.tteapp.model.dto.*;
 import com.challenge.tteapp.model.response.*;
 import com.challenge.tteapp.processor.JwtService;
 import com.challenge.tteapp.processor.ValidationError;
@@ -228,6 +225,7 @@ class UserControllerTest {
         CouponCode couponCode = new CouponCode();
         couponCode.setCouponCod("");
         CartBeforeCheckResponse cartBeforeCheckResponse = new CartBeforeCheckResponse();
+
         ResponseEntity<CartBeforeCheckResponse> successResponse = new ResponseEntity<>(cartBeforeCheckResponse, HttpStatus.CREATED);
         lenient().when(userService.addCoupon(eq(couponCode),anyString(), anyString())).thenReturn(successResponse);
         userController.addCoupon(couponCode);
@@ -240,6 +238,31 @@ class UserControllerTest {
         when(productRepository.findProductPriceById(anyLong())).thenReturn(2.0);
         ResponseEntity<CartBeforeCheckResponse> response3 = userServiceimpl.addCoupon(couponCode,"email", "requestId");
         assertEquals(HttpStatus.OK, response3.getStatusCode());
+    }
+
+
+    @Test
+    void testCartBeforeCheckResponse() {
+        CartBeforeCheckResponse response = new CartBeforeCheckResponse();
+        response.setUserId("user123");
+        List<Products> products = new ArrayList<>();
+        response.setShoppingCart(products);
+        CouponDTO coupon = new CouponDTO();
+        coupon.setCouponCode("couponCode");
+        coupon.setDiscountPercentage(50);
+        response.setCouponApplied(coupon);
+        response.setTotalBeforeDiscount(30.0);
+        response.setTotalAfterDiscount(25.0);
+        response.setShippingCost(5.0);
+        response.setFinalTotal(30.0);
+
+        assertEquals("user123", response.getUserId());
+        assertEquals(products, response.getShoppingCart());
+        assertEquals(coupon, response.getCouponApplied());
+        assertEquals(30.0, response.getTotalBeforeDiscount(), 0.001);
+        assertEquals(25.0, response.getTotalAfterDiscount(), 0.001);
+        assertEquals(5.0, response.getShippingCost(), 0.001);
+        assertEquals(30.0, response.getFinalTotal(), 0.001);
     }
 
     @Test
