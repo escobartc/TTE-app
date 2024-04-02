@@ -2,6 +2,7 @@ package com.challenge.tteapp.service;
 
 import com.challenge.tteapp.model.dto.ProductDTO;
 import com.challenge.tteapp.model.dto.ReviewDTO;
+import com.challenge.tteapp.model.response.MessageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +17,9 @@ public interface ProductService {
 
     ResponseEntity<Object> saveProduct(ProductDTO product, String requestId);
 
-    List<ReviewDTO> getProductReviews(Long productId);
+    ResponseEntity<List<ReviewDTO>> getProductReviews(Long productId, String requestId);
 
-    ResponseEntity<Object> addProductReview(Long productId, ReviewDTO reviewDTO, String requestId);
-
-    boolean doesProductExist(Long productId);
+    ResponseEntity<MessageResponse> addProductReview(Long productId, ReviewDTO reviewDTO, String requestId, String email);
 
     Page<ProductDTO> getAllProductsWithOrder(String orderBy, Pageable pageable);
 }

@@ -292,7 +292,7 @@ class UserControllerTest {
     @Test
     void cartCheckoutReviewTest(){
         ResponseEntity<List<CartCheckoutResponse>> successResponse = new ResponseEntity<>(new ArrayList<>(), HttpStatus.CREATED);
-        lenient().when(userService.cartCheckoutReview(anyString(), anyString())).thenReturn(successResponse);
+        lenient().when(userService.cartCheckoutReview(anyString(), anyLong(),anyString())).thenReturn(successResponse);
         userController.cartCheckoutReview();
         Orders orders = new Orders();
         orders.setUser(1L);
@@ -310,7 +310,7 @@ class UserControllerTest {
         List<OrderProducts> orderProducts1 = new ArrayList<>();
         orderProducts1.add(orderProducts);
         when(orderProductsRepository.findAllOrderProducts(anyLong())).thenReturn(orderProducts1);
-        ResponseEntity<List<CartCheckoutResponse>> response = userServiceimpl.cartCheckoutReview("email", "requestId");
+        ResponseEntity<List<CartCheckoutResponse>> response = userServiceimpl.cartCheckoutReview("email",1L, "requestId");
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 

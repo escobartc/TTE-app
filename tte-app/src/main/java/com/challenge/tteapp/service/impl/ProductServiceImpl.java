@@ -2,6 +2,7 @@ package com.challenge.tteapp.service.impl;
 
 import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.dto.*;
+import com.challenge.tteapp.model.response.MessageResponse;
 import com.challenge.tteapp.repository.CategoryRepository;
 import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.repository.ReviewRepository;
@@ -16,20 +17,19 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 
 @AllArgsConstructor
 @Service
 @Slf4j
-public class ProductServiceImp implements ProductService {
+public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
-    private final String ERROR = "error";
-
 
     @Override
     public List<ProductDTO> getAllProducts() {
@@ -60,7 +60,6 @@ public class ProductServiceImp implements ProductService {
         return productRepository.findAll(pageable).map(this::mapProductDTOCustomer);
     }
 
-
     @Override
     public Optional<ProductDTO> getProduct(Long product_id) {
         Optional<Product> product = productRepository.findById(product_id);
@@ -69,6 +68,39 @@ public class ProductServiceImp implements ProductService {
             return Optional.of(productDTO);
         } else {
             return Optional.empty();
+        }
+    }
+
+    @Override
+    public ResponseEntity<List<ReviewDTO>> getProductReviews(Long productId, String requestId) {
+        log.info("products reviews with requestId: [{}]", requestId);
+        List<ReviewDTO> reviews = getProductReviewsById(productId);
+        if (reviews.isEmpty()) {
+            log.warn("No reviews found for product, with requestId: [{}]", requestId);
+            throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "No reviews found for product");
+        } else {
+            log.info("reviews found for product, with requestId: [{}]", requestId);
+            return new ResponseEntity<>(reviews, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public ResponseEntity<MessageResponse> addProductReview(Long productId, ReviewDTO reviewDTO, String requestId, String email) {
+        log.info("add product review, with requestId: [{}]", requestId);
+        Review review = new Review();
+        doesUserExist(reviewDTO.getUser(), email);
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            review.setProduct_id(product);
+            review.setUser(reviewDTO.getUser());
+            review.setComment(reviewDTO.getComment());
+            Review savedReview = reviewRepository.save(review);
+            log.info("add product successful added, with requestId: [{}]", requestId);
+            return new ResponseEntity<>(new MessageResponse("review: " + savedReview.getId() + " successful added"), HttpStatus.CREATED);
+        } else {
+            log.error("Invalid product ID: " + productId + ", with requestId: [{}]", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid product ID: " + productId);
         }
     }
 
@@ -161,8 +193,19 @@ public class ProductServiceImp implements ProductService {
         return product;
     }
 
-    @Override
-    public List<ReviewDTO> getProductReviews(Long productId) {
+    private void doesUserExist(String username, String email) {
+        Optional<User> user = userRepository.findByUsername(username);
+        Optional<User> user1 = userRepository.findByEmail(email);
+        if (user.isEmpty() || user1.isEmpty()) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "User with provided username does not exist");
+        } else {
+            if (!user.get().getUsername().equals(user1.get().getUsername())) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Mismatch between provided userId and email");
+            }
+        }
+    }
+
+    private List<ReviewDTO> getProductReviewsById(Long productId) {
         return productRepository.findById(productId)
                 .map(product -> product.getReviews().stream()
                         .map(review -> convertToReviewDTO(review, productId))
@@ -171,69 +214,12 @@ public class ProductServiceImp implements ProductService {
                 .orElse(Collections.emptyList());
     }
 
-
     public ReviewDTO convertToReviewDTO(Review review, Long productId) {
-        // Convert the Review object to a ReviewDTO object
         ReviewDTO reviewDTO = new ReviewDTO();
         reviewDTO.setUser(review.getUser());
         reviewDTO.setComment(review.getComment());
         reviewDTO.setProductId(productId);
-        // Set other properties as needed
         return reviewDTO;
     }
 
-
-    @Override
-    public ResponseEntity<Object> addProductReview(Long productId, ReviewDTO reviewDTO, String requestId) {
-        Review review = new Review();
-        boolean validUser = doesUserExist(reviewDTO.getUser());
-        boolean validProduct = doesProductExist(productId);
-        boolean validComment = !reviewDTO.getComment().isEmpty();
-
-        if (validUser && validProduct && validComment) {
-            // Get the product from the database using its ID
-            Optional<Product> productOptional = productRepository.findById(productId);
-            if (productOptional.isPresent()) {
-                Product product = productOptional.get();
-                // Set the product association in the review
-                review.setProduct_id(product);
-                review.setUser(reviewDTO.getUser());
-                review.setComment(reviewDTO.getComment());
-                Review savedReview = reviewRepository.save(review);
-                Map<String, Object> responseBody = new HashMap<>();
-                responseBody.put("review_id", savedReview.getId());
-                responseBody.put("message", "Successful");
-                return new ResponseEntity<>(responseBody, HttpStatus.CREATED);
-            } else {
-                // Handle the case where the product does not exist
-                return ResponseEntity.badRequest().body("Invalid product ID: " + productId);
-            }
-        } else {
-            // Handle invalid fields
-            Map<String, String> response = new HashMap<>();
-            if (!validUser) {
-                response.put("userError", "User with provided username does not exist");
-            }
-            if (!validProduct) {
-                response.put("productError", "Invalid product or product does not exist");
-            }
-            if (!validComment) {
-                response.put("commentError", "Invalid comment, should not be empty");
-            }
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-
-    @Override
-    public boolean doesProductExist(Long productId) {
-        Optional<Product> product = productRepository.findById(productId);
-        return product.isPresent();
-    }
-
-    public boolean doesUserExist(String username) {
-        Optional<User> user = userRepository.findByUsername(username);
-        return user.isPresent();
-    }
-
-    }
+}

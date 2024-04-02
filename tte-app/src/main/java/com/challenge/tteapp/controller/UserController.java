@@ -107,9 +107,17 @@ public class UserController {
     public ResponseEntity<List<CartCheckoutResponse>> cartCheckoutReview() {
         String email = InfoToken.getName();
         String requestId = UUID.randomUUID().toString();
-        log.info("JOIN TO TTE-APP, cart checkout: {}, with requestId: [{}]", email, requestId);
-        return userService.cartCheckoutReview(email, requestId);
+        log.info("JOIN TO TTE-APP, cart checkout review: {}, with requestId: [{}]", email, requestId);
+        return userService.cartCheckoutReview(email, null,requestId);
     }
+    @GetMapping(path = "/cart/checkout/review/{userId}")
+    public ResponseEntity<List<CartCheckoutResponse>> cartCheckoutReview(@PathVariable Long userId) {
+        String email = InfoToken.getName();
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, cart checkout review whit user id: {}, with requestId: [{}]", email, requestId);
+        return userService.cartCheckoutReview(email, userId,requestId);
+    }
+
 
     @PutMapping(path = "/cart/checkout/review")
     public ResponseEntity<MessageResponse> cartCheckoutUpdateState(@RequestBody UpdateStatusOrderDTO updateStatusOrderDTO) {

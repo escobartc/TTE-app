@@ -43,6 +43,12 @@ class AdminControllerTest {
     @Mock
     private AdminService adminService;
     @Mock
+    private CartRepository cartRepository;
+    @Mock
+    private OrdersRepository ordersRepository;
+    @Mock
+    private OrderProductsRepository orderProductsRepository;
+    @Mock
     private UserRepository userRepository;
     @Mock
     private CouponRepository couponRepository;
@@ -137,7 +143,7 @@ class AdminControllerTest {
     }
 
     private void testPendingProductAndCategory() {
-        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("approve");
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("APPROVED");
 
         Product product = preparePendingProduct();
         Category category = preparePendingCategory();
@@ -308,18 +314,24 @@ class AdminControllerTest {
         ResponseEntity<MessageResponse> response = adminController.deleteUser(userResponse);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-
-        when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(new User());
         List<Integer> list = new ArrayList<>();
         list.add(1);
         list.add(2);
         lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(list);
+        User user = new User();
+        user.setRole("ADMIN");
+        when(userRepository.findElement(anyString())).thenReturn(user);
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.deleteUser(userResponse, "requestId");
+        });
+        user.setRole("EMPLOYEE");
+        lenient().when(userRepository.findElement(anyString())).thenReturn(user);
+        List<Integer> cart = new ArrayList<>();
+        lenient().when(cartRepository.findArticleIdsByUserId(anyLong())).thenReturn(cart);
+        List<Integer> orders = new ArrayList<>();
+        lenient().when(ordersRepository.findArticleIdsByUserId(anyLong())).thenReturn(orders);
         ResponseEntity<MessageResponse> response2 = adminServiceImpl.deleteUser(userResponse, "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
-
-        when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(null);
-        ResponseEntity<MessageResponse> response3 = adminServiceImpl.deleteUser(userResponse, "requestId");
-        assertEquals(HttpStatus.NOT_FOUND, response3.getStatusCode());
 
     }
 

@@ -26,4 +26,8 @@ public interface WishListRepository extends JpaRepository<WishList, Long> {
     @Modifying
     @Query(value = "INSERT INTO wishlist (user_id, product_id) VALUES (:userId, :articleId)", nativeQuery = true)
     void addElementToList(@Param("userId") Long userId, @Param("articleId") Integer articleId);
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM WishList w where w.user=:userId")
+    void deleteAllByUser(@Param("userId") Long userId);
 }

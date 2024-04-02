@@ -1,17 +1,19 @@
 package com.challenge.tteapp.controller;
 
+import com.challenge.tteapp.configuration.InfoToken;
 import com.challenge.tteapp.model.Category;
 import com.challenge.tteapp.model.Inventory;
 import com.challenge.tteapp.model.Product;
 import com.challenge.tteapp.model.Rating;
 import com.challenge.tteapp.model.dto.*;
+import com.challenge.tteapp.model.response.MessageResponse;
 import com.challenge.tteapp.repository.ProductRepository;
 import com.challenge.tteapp.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,27 +35,18 @@ public class ProductController {
     private final ProductRepository productRepository;
 
     @GetMapping("/store/product/{productId}/reviews")
-    public ResponseEntity<Object> getProductReviews(@PathVariable Long productId) {
-        List<ReviewDTO> reviews = productService.getProductReviews(productId);
-        if (reviews.isEmpty()) {
-            Map<String, String> responseBody = new HashMap<>();
-            responseBody.put(MESSAGE, "No reviews found for product");
-            return new ResponseEntity<>(responseBody, HttpStatus.NOT_FOUND);
-        } else {
-            return new ResponseEntity<>(reviews, HttpStatus.OK);
-        }
+    public ResponseEntity<List<ReviewDTO>> getProductReviews(@PathVariable Long productId) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, products reviews with requestId: [{}]", requestId);
+        return productService.getProductReviews(productId, requestId);
     }
 
     @PostMapping("/store/product/{productId}/reviews/add")
-    public ResponseEntity<Object> addProductReview(@PathVariable Long productId, @RequestBody ReviewDTO reviewDTO) {
-        try {
-            String requestId = UUID.randomUUID().toString();
-            ResponseEntity<Object> response = productService.addProductReview(productId, reviewDTO, requestId);
-            return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
-        } catch (Exception e) {
-            log.error("Error creating review: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(MESSAGE, "Failed to create review"));
-        }
+    public ResponseEntity<MessageResponse> addProductReview(@PathVariable Long productId, @RequestBody @Valid ReviewDTO reviewDTO) {
+        String requestId = UUID.randomUUID().toString();
+        String email = InfoToken.getName();
+        log.info("JOIN TO TTE-APP add product review, with requestId: [{}]", requestId);
+        return productService.addProductReview(productId, reviewDTO, requestId,email);
     }
 
 

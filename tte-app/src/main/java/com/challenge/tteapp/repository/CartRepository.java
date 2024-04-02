@@ -33,4 +33,9 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
     @Modifying
     @Query(value = "UPDATE cart SET cart.quantity = :quantity WHERE cart.user_id  = :userId", nativeQuery = true)
     void updateCartQuantity(@Param("quantity") Integer quantity, @Param("userId") Long userId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM Cart c where c.user=:userId")
+    void deleteAllByUser(@Param("userId") Long userId);
 }
