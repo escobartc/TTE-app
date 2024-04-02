@@ -104,7 +104,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private ProductDTO mapProductDTOCustomer(Product product) {
+    public ProductDTO mapProductDTOCustomer(Product product) {
         ProductDTO productDTO = mapToProductDTO(product);
         productDTO.setImage(product.getImage());
         productDTO.setDescription(product.getDescription());
@@ -118,7 +118,7 @@ public class ProductServiceImpl implements ProductService {
         productDTO.setId(product.getId());
         productDTO.setTitle(product.getTitle());
         productDTO.setPrice(product.getPrice());
-        productDTO.setCategory(mapToCategoryDTO(product.getCategory())); // Map Category to CategoryDTO
+        productDTO.setCategory(mapToCategoryDTO(product.getCategory()));
         return productDTO;
     }
 
@@ -148,10 +148,8 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity<Object> saveProduct(ProductDTO productDTO, String requestId) {
         Product product = copyProductForDB(productDTO);
 
-        // Resolve category based on name and set it in the product
         Category category = categoryRepository.findByName(productDTO.getCategory().getName());
         if (category == null) {
-            // If category does not exist, create it
             category = new Category();
             category.setName(productDTO.getCategory().getName());
             category.setState(productDTO.getState());
@@ -159,10 +157,8 @@ public class ProductServiceImpl implements ProductService {
         }
         product.setCategory(category);
 
-        // Save the Product entity
         Product savedProduct = productRepository.save(product);
 
-        // Return ResponseEntity with the saved Product
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
 

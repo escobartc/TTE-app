@@ -1,9 +1,10 @@
 package com.challenge.tteapp;
 
 import com.challenge.tteapp.controller.ProductController;
-import com.challenge.tteapp.model.Product;
-import com.challenge.tteapp.model.Review;
-import com.challenge.tteapp.model.User;
+import com.challenge.tteapp.model.*;
+import com.challenge.tteapp.model.dto.InventoryDTO;
+import com.challenge.tteapp.model.dto.ProductDTO;
+import com.challenge.tteapp.model.dto.RatingDTO;
 import com.challenge.tteapp.model.dto.ReviewDTO;
 import com.challenge.tteapp.model.response.MessageResponse;
 import com.challenge.tteapp.repository.ProductRepository;
@@ -106,4 +107,14 @@ class ProductServiceImplTest {
         assertEquals(HttpStatus.CREATED, response2.getStatusCode());
     }
 
+    @Test
+    void MapperTest(){
+        Product product = new Product();
+        product.setInventory(new Inventory(1L,1,1));
+        product.setCategory(new Category(1L,"name","APPROVED"));
+        product.setRating(new Rating(1L,1.0,1));
+        product.setId(1L);
+        product.setState("APPROVED");
+        productServiceimpl.mapProductDTOCustomer(product);
+    }
 }
