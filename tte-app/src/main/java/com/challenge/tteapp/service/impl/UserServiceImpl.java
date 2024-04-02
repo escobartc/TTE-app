@@ -228,7 +228,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<CartBeforeCheckResponse> addCoupon(CouponCode couponCode, String email, String requestId) {
-        log.info("Add coupon to cart: {} , requestId: [{}]", requestId, email);
+        log.info("Add coupon to cart: {} , requestId: [{}]", email, requestId);
         User user = userRepository.findElement(email);
         Coupon coupon = null;
         if (!couponCode.getCouponCod().isEmpty()) {
@@ -264,7 +264,11 @@ public class UserServiceImpl implements UserService {
         if (orders != null && orders.getOrderStatus().equals(CREATED)) {
             couponRepository.updateCouponState(orders.getCouponId(), Boolean.TRUE);
             List<Products> productsList = buildProducts(user);
+            int productsAvailable = 0;
             for (Products product : productsList) {
+                Optional<Product> product1 = productRepository.findById(product.getProductId());
+                productsAvailable = product1.get().getInventory().getAvailable() - product.getQuantity();
+                productRepository.updateInventoryAvailable(productsAvailable,product1.get().getInventory().getId());
                 OrderProducts orderProduct = new OrderProducts();
                 orderProduct.setOrderId(orders.getId());
                 orderProduct.setQuantity(product.getQuantity());
@@ -282,19 +286,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<List<CartCheckoutResponse>> cartCheckoutReview(String email, String requestId) {
+    public ResponseEntity<List<CartCheckoutResponse>> cartCheckoutReview(String email, Long userId, String requestId) {
         log.info("cart checkout review: {} , requestId: [{}]", requestId, email);
+        List<Orders> orders;
+        if(userId==null){
+            orders = ordersRepository.findAllOrders();
+        }else{
+            orders = ordersRepository.findOrdersUserId(userId);
+        }
+        if(orders.isEmpty()){
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "orders does not exists");
+        }else{
+            List<CartCheckoutResponse> response = new ArrayList<>();
 
-        List<Orders> orders = ordersRepository.findAllOrders();
-        List<CartCheckoutResponse> response = new ArrayList<>();
+            for (Orders order : orders) {
+                List<OrderProducts> orderProducts = orderProductsRepository.findAllOrderProducts(order.getId());
+                CartCheckoutResponse cartcheckoutResponse = getCartCheckoutResponse(order, orderProducts);
+                response.add(cartcheckoutResponse);
+            }
 
-        for (Orders order : orders) {
-            List<OrderProducts> orderProducts = orderProductsRepository.findAllOrderProducts(order.getId());
-            CartCheckoutResponse cartcheckoutResponse = getCartCheckoutResponse(order, orderProducts);
-            response.add(cartcheckoutResponse);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private static CartCheckoutResponse getCartCheckoutResponse(Orders order, List<OrderProducts> orderProducts) {

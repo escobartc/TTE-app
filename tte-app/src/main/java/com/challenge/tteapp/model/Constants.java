@@ -12,4 +12,5 @@ public class Constants {
     public static final String CUSTOMER = "CUSTOMER";
 
     public static final String CREATED = "CREATED";
+    public static final String PENDINGDELETION = "Pending for deletion";
 }

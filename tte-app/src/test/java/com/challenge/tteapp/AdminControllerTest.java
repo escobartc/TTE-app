@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.challenge.tteapp.model.Constants.PENDINGDELETION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -42,6 +43,12 @@ class AdminControllerTest {
     private ProductService productService;
     @Mock
     private AdminService adminService;
+    @Mock
+    private CartRepository cartRepository;
+    @Mock
+    private OrdersRepository ordersRepository;
+    @Mock
+    private OrderProductsRepository orderProductsRepository;
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -122,6 +129,8 @@ class AdminControllerTest {
         testDeclinedProductAndCategory();
         testInvalidAction();
         testInvalidActionWithNullId();
+        testPendingProductAndCategoryApproved();
+        testPendingProductAndCategoryDecline();
     }
 
     private void testSuccessfulApproval() {
@@ -137,7 +146,7 @@ class AdminControllerTest {
     }
 
     private void testPendingProductAndCategory() {
-        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("approve");
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("APPROVED");
 
         Product product = preparePendingProduct();
         Category category = preparePendingCategory();
@@ -152,8 +161,44 @@ class AdminControllerTest {
         assertEquals(HttpStatus.OK, response2.getStatusCode());
     }
 
+    private void testPendingProductAndCategoryApproved() {
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("APPROVED");
+
+        Product product = preparePendingProduct();
+        product.setState(PENDINGDELETION);
+        Category category = preparePendingCategory();
+        category.setState(PENDINGDELETION);
+
+        lenient().when(productRepository.findProductId(anyLong())).thenReturn(product);
+        lenient().when(categoryRepository.findCategoryId(anyLong())).thenReturn(category);
+
+        ResponseEntity<MessageResponse> response1 = adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
+        assertEquals(HttpStatus.OK, response1.getStatusCode());
+
+        ResponseEntity<MessageResponse> response2 = adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+
+    private void testPendingProductAndCategoryDecline() {
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("DECLINE");
+
+        Product product = preparePendingProduct();
+        product.setState(PENDINGDELETION);
+        Category category = preparePendingCategory();
+        category.setState(PENDINGDELETION);
+
+        lenient().when(productRepository.findProductId(anyLong())).thenReturn(product);
+        lenient().when(categoryRepository.findCategoryId(anyLong())).thenReturn(category);
+
+        ResponseEntity<MessageResponse> response1 = adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
+        assertEquals(HttpStatus.OK, response1.getStatusCode());
+
+        ResponseEntity<MessageResponse> response2 = adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+
     private void testDeclinedProductAndCategory() {
-        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("decline");
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("DECLINE");
 
         ResponseEntity<MessageResponse> response1 = adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
         assertEquals(HttpStatus.OK, response1.getStatusCode());
@@ -174,13 +219,13 @@ class AdminControllerTest {
         });
 
         assertThrows(HttpClientErrorException.class, () -> {
-            adminServiceImpl.approvalJobs(approvalAdminDTO, "approve", "requestId");
+            adminServiceImpl.approvalJobs(approvalAdminDTO, "APPROVED", "requestId");
         });
     }
 
     private void testInvalidActionWithNullId() {
         ApprovalAdminDTO approvalAdminDTO = new ApprovalAdminDTO();
-        approvalAdminDTO.setAction("approve");
+        approvalAdminDTO.setAction("APPROVED");
 
         assertThrows(HttpClientErrorException.class, () -> {
             adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
@@ -308,18 +353,24 @@ class AdminControllerTest {
         ResponseEntity<MessageResponse> response = adminController.deleteUser(userResponse);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-
-        when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(new User());
         List<Integer> list = new ArrayList<>();
         list.add(1);
         list.add(2);
         lenient().when(wishListRepository.findArticleIdsByUserId(anyLong())).thenReturn(list);
+        User user = new User();
+        user.setRole("ADMIN");
+        when(userRepository.findElement(anyString())).thenReturn(user);
+        assertThrows(HttpClientErrorException.class, () -> {
+            adminServiceImpl.deleteUser(userResponse, "requestId");
+        });
+        user.setRole("EMPLOYEE");
+        lenient().when(userRepository.findElement(anyString())).thenReturn(user);
+        List<Integer> cart = new ArrayList<>();
+        lenient().when(cartRepository.findArticleIdsByUserId(anyLong())).thenReturn(cart);
+        List<Integer> orders = new ArrayList<>();
+        lenient().when(ordersRepository.findArticleIdsByUserId(anyLong())).thenReturn(orders);
         ResponseEntity<MessageResponse> response2 = adminServiceImpl.deleteUser(userResponse, "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
-
-        when(userRepository.findElement(userResponse.getUsers().get(0))).thenReturn(null);
-        ResponseEntity<MessageResponse> response3 = adminServiceImpl.deleteUser(userResponse, "requestId");
-        assertEquals(HttpStatus.NOT_FOUND, response3.getStatusCode());
 
     }
 

@@ -14,9 +14,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     List<Category> findByState(String state);
 
-    @Query("SELECT c FROM Category c WHERE c.state <> 'Approved'")
+    @Query("SELECT c FROM Category c WHERE c.state <> 'APPROVED'")
     List<Category> findAllCategoryOperations();
 
-    @Query("SELECT c FROM Category c WHERE c.id = :idCategory and c.state <> 'Approved'")
+    @Query("SELECT c FROM Category c WHERE c.id = :idCategory and c.state <> 'APPROVED'")
     Category findCategoryId(@Param("idCategory") Long idCategory);
 }

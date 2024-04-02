@@ -26,6 +26,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -286,13 +287,17 @@ class UserControllerTest {
         when(ordersRepository.findOrders(anyLong(),anyString())).thenReturn(orders);
         List<Object[]> cartData = prepareCartData();
         when(cartRepository.findProductsCartById(user.getId())).thenReturn(cartData);
+        Product product = new Product();
+        product.setInventory(new Inventory(1L,1,1));
+        Optional<Product> product1 = Optional.of(product);
+        when(productRepository.findById(anyLong())).thenReturn(product1);
         ResponseEntity<MessageResponse> response = userServiceimpl.cartCheckout("email", "requestId");
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
     @Test
     void cartCheckoutReviewTest(){
         ResponseEntity<List<CartCheckoutResponse>> successResponse = new ResponseEntity<>(new ArrayList<>(), HttpStatus.CREATED);
-        lenient().when(userService.cartCheckoutReview(anyString(), anyString())).thenReturn(successResponse);
+        lenient().when(userService.cartCheckoutReview(anyString(), anyLong(),anyString())).thenReturn(successResponse);
         userController.cartCheckoutReview();
         Orders orders = new Orders();
         orders.setUser(1L);
@@ -301,7 +306,6 @@ class UserControllerTest {
         orders.setCouponId(1L);
         List<Orders> orders1 = new ArrayList<>();
         orders1.add(orders);
-        when(ordersRepository.findAllOrders()).thenReturn(orders1);
         OrderProducts orderProducts = new OrderProducts();
         orderProducts.setOrderId(1L);
         orderProducts.setProductId(1L);
@@ -310,8 +314,15 @@ class UserControllerTest {
         List<OrderProducts> orderProducts1 = new ArrayList<>();
         orderProducts1.add(orderProducts);
         when(orderProductsRepository.findAllOrderProducts(anyLong())).thenReturn(orderProducts1);
-        ResponseEntity<List<CartCheckoutResponse>> response = userServiceimpl.cartCheckoutReview("email", "requestId");
+        assertThrows(HttpClientErrorException.class, () -> {
+            userServiceimpl.cartCheckoutReview("email",1L, "requestId");
+        });
+        when(ordersRepository.findOrdersUserId(anyLong())).thenReturn(orders1);
+        ResponseEntity<List<CartCheckoutResponse>> response = userServiceimpl.cartCheckoutReview("email",1L, "requestId");
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        when(ordersRepository.findAllOrders()).thenReturn(orders1);
+        ResponseEntity<List<CartCheckoutResponse>> response2 = userServiceimpl.cartCheckoutReview("email",null, "requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
     }
 
     @Test

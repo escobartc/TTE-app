@@ -1,7 +1,9 @@
 package com.challenge.tteapp.repository;
 
 import com.challenge.tteapp.model.Product;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -30,4 +32,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p WHERE p.state <> 'Approved' ")
     List<Product> findAllProductsOperations();
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE inventory i " +
+            "JOIN product p ON p.inventory_id = i.id " +
+            "SET i.available = :available " +
+            "WHERE i.id = :inventoryId", nativeQuery = true)
+    void updateInventoryAvailable(@Param("available") int available, @Param("inventoryId") Long inventoryId);
 }

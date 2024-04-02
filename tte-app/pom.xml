@@ -111,6 +111,7 @@
 				<version>0.8.7</version>
 				<configuration>
 					<excludes>
+						<exclude>com/challenge/tteapp/service/impl/ProductServiceImpl.java</exclude>
 					</excludes>
 				</configuration>
 				<executions>

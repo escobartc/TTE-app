@@ -27,6 +27,8 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 
+import static com.challenge.tteapp.model.Constants.PENDINGDELETION;
+
 @AllArgsConstructor
 @Service
 @Slf4j
@@ -37,6 +39,9 @@ public class AdminServiceImpl implements AdminService {
     private final WishListRepository wishListRepository;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final CartRepository cartRepository;
+    private final OrdersRepository ordersRepository;
+    private final OrderProductsRepository orderProductsRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
@@ -99,20 +104,33 @@ public class AdminServiceImpl implements AdminService {
     private ResponseEntity<MessageResponse> handleProductApproval(ApprovalAdminDTO approvalAdminDTO, String action, String requestId) {
         Product product = productRepository.findProductId(approvalAdminDTO.getId());
         if (product != null) {
-            if (action.equals("approve")) {
+            if (action.equals("APPROVED")) {
+                if(product.getState().equals(PENDINGDELETION)){
+                    log.info("request completed, product delete by admin, with requestId: {}", requestId);
+                    productRepository.delete(product);
+                    log.info("Product deleted successfully, with requestId: {}", requestId);
+                    return ResponseEntity.ok(new MessageResponse("request completed, Product deleted successfully"));
+                }
                 log.info("approve product by admin, with requestId: {}", requestId);
                 product.setState(approvalAdminDTO.getAction());
                 productRepository.save(product);
                 log.info("Success product Approval, with requestId: {}", requestId);
                 return ResponseEntity.ok(new MessageResponse("Success Approval"));
-            } else if (action.equals("decline")) {
+            } else if (action.equals("DECLINE")) {
+                if(product.getState().equals(PENDINGDELETION)){
+                    log.info("request completed, product save by admin, with requestId: {}", requestId);
+                    product.setState("PENDING");
+                    productRepository.save(product);
+                    log.info("Product save successfully, with requestId: {}", requestId);
+                    return ResponseEntity.ok(new MessageResponse("request completed, product save by admin successfully"));
+                }
                 log.info("decline product by admin, with requestId: {}", requestId);
                 productRepository.delete(product);
                 log.info("Product deleted successfully, with requestId: {}", requestId);
                 return ResponseEntity.ok(new MessageResponse("Product deleted successfully"));
             }
-            log.error("Invalid action. Action must be 'approve' or 'decline', with requestId: {}", requestId);
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid action. Action must be 'approve' or 'decline'");
+            log.error("Invalid action. Action must be 'APPROVED' or 'DECLINE', with requestId: {}", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid action. Action must be 'APPROVED' or 'DECLINE'");
         } else {
             log.error("Product ID incorrect, please verify your information, with requestId: {}", requestId);
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Product ID incorrect, please verify your information");
@@ -122,20 +140,33 @@ public class AdminServiceImpl implements AdminService {
     private ResponseEntity<MessageResponse> handleCategoryApproval(ApprovalAdminDTO approvalAdminDTO, String action, String requestId) {
         Category category = categoryRepository.findCategoryId(approvalAdminDTO.getId());
         if (category != null) {
-            if (action.equals("approve")) {
+            if (action.equals("APPROVED")) {
+                if(category.getState().equals(PENDINGDELETION)){
+                    log.info("request completed, category delete by admin, with requestId: {}", requestId);
+                    categoryRepository.delete(category);
+                    log.info("category deleted successfully, with requestId: {}", requestId);
+                    return ResponseEntity.ok(new MessageResponse("request completed, category by admin deleted successfully"));
+                }
                 log.info("approve category by admin, with requestId: {}", requestId);
                 category.setState(approvalAdminDTO.getAction());
                 categoryRepository.save(category);
                 log.info("Success category Approval, with requestId: {}", requestId);
                 return ResponseEntity.ok(new MessageResponse("Success Approval"));
-            } else if (action.equals("decline")) {
+            } else if (action.equals("DECLINE")) {
+                if(category.getState().equals(PENDINGDELETION)){
+                    log.info("request completed, product save by admin, with requestId: {}", requestId);
+                    category.setState("PENDING");
+                    categoryRepository.save(category);
+                    log.info("Product save successfully, with requestId: {}", requestId);
+                    return ResponseEntity.ok(new MessageResponse("request completed, category save by admin successfully"));
+                }
                 log.info("decline category by admin, with requestId: {}", requestId);
                 categoryRepository.delete(category);
                 log.info("Category deleted successfully, with requestId: {}", requestId);
                 return ResponseEntity.ok(new MessageResponse("Category deleted successfully"));
             }
-            log.error("Invalid action. Action must be 'approve' or 'decline', with requestId: {}", requestId);
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid action. Action must be 'approve' or 'decline'");
+            log.error("Invalid action. Action must be 'APPROVED' or 'DECLINE', with requestId: {}", requestId);
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid action. Action must be 'APPROVED' or 'DECLINE'");
         } else {
             log.error("Category ID incorrect, please verify your information, with requestId: {}", requestId);
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Category ID incorrect, please verify your information");
@@ -194,9 +225,22 @@ public class AdminServiceImpl implements AdminService {
         for (String username : users.getUsers()) {
             User user = userRepository.findElement(username);
             if (user != null) {
+                if(user.getRole().equals("ADMIN"))
+                    throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "It is not possible to eliminate ADMIN.");
                 List<Integer> wishList = wishListRepository.findArticleIdsByUserId(user.getId());
                 if (!wishList.isEmpty()) {
-                    wishListRepository.deleteById(user.getId());
+                    wishListRepository.deleteAllByUser(user.getId());
+                }
+                List<Integer> cart = cartRepository.findArticleIdsByUserId(user.getId());
+                if(!cart.isEmpty()){
+                    cartRepository.deleteAllByUser(user.getId());
+                }
+                List<Integer> orders = ordersRepository.findArticleIdsByUserId(user.getId());
+                if(!orders.isEmpty()){
+                    for(Integer numOrder: orders){
+                        orderProductsRepository.deleteAllByUser(numOrder.longValue());
+                    }
+                    ordersRepository.deleteAllByUser(user.getId());
                 }
                 userRepository.delete(user);
                 deletedUsernames.add(username);
