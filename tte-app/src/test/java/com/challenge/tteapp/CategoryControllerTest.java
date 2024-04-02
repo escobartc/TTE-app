@@ -110,7 +110,6 @@ class CategoryControllerTest {
         categoryController.updateCategory(categoryUpdate);
         assertThrows(HttpClientErrorException.class, () -> {
             categoryServiceimpl.updateCategory(categoryUpdate, "requestId");
-            .
         });
         when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(new Category()));
         ResponseEntity<MessageResponse> response = categoryServiceimpl.updateCategory(categoryUpdate, "requestId");
