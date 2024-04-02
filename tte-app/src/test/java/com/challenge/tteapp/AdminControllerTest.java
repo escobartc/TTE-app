@@ -159,7 +159,7 @@ class AdminControllerTest {
     }
 
     private void testDeclinedProductAndCategory() {
-        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("decline");
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("DECLINE");
 
         ResponseEntity<MessageResponse> response1 = adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
         assertEquals(HttpStatus.OK, response1.getStatusCode());
@@ -180,13 +180,13 @@ class AdminControllerTest {
         });
 
         assertThrows(HttpClientErrorException.class, () -> {
-            adminServiceImpl.approvalJobs(approvalAdminDTO, "approve", "requestId");
+            adminServiceImpl.approvalJobs(approvalAdminDTO, "APPROVED", "requestId");
         });
     }
 
     private void testInvalidActionWithNullId() {
         ApprovalAdminDTO approvalAdminDTO = new ApprovalAdminDTO();
-        approvalAdminDTO.setAction("approve");
+        approvalAdminDTO.setAction("APPROVED");
 
         assertThrows(HttpClientErrorException.class, () -> {
             adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
