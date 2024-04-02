@@ -27,6 +27,8 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 
+import static com.challenge.tteapp.model.Constants.PENDINGDELETION;
+
 @AllArgsConstructor
 @Service
 @Slf4j
@@ -103,7 +105,7 @@ public class AdminServiceImpl implements AdminService {
         Product product = productRepository.findProductId(approvalAdminDTO.getId());
         if (product != null) {
             if (action.equals("APPROVED")) {
-                if(product.getState().equals("Pending for deletion")){
+                if(product.getState().equals(PENDINGDELETION)){
                     log.info("request completed, product delete by admin, with requestId: {}", requestId);
                     productRepository.delete(product);
                     log.info("Product deleted successfully, with requestId: {}", requestId);
@@ -115,7 +117,7 @@ public class AdminServiceImpl implements AdminService {
                 log.info("Success product Approval, with requestId: {}", requestId);
                 return ResponseEntity.ok(new MessageResponse("Success Approval"));
             } else if (action.equals("DECLINE")) {
-                if(product.getState().equals("Pending for deletion")){
+                if(product.getState().equals(PENDINGDELETION)){
                     log.info("request completed, product save by admin, with requestId: {}", requestId);
                     product.setState("PENDING");
                     productRepository.save(product);
@@ -139,7 +141,7 @@ public class AdminServiceImpl implements AdminService {
         Category category = categoryRepository.findCategoryId(approvalAdminDTO.getId());
         if (category != null) {
             if (action.equals("APPROVED")) {
-                if(category.getState().equals("Pending for deletion")){
+                if(category.getState().equals(PENDINGDELETION)){
                     log.info("request completed, category delete by admin, with requestId: {}", requestId);
                     categoryRepository.delete(category);
                     log.info("category deleted successfully, with requestId: {}", requestId);
@@ -151,7 +153,7 @@ public class AdminServiceImpl implements AdminService {
                 log.info("Success category Approval, with requestId: {}", requestId);
                 return ResponseEntity.ok(new MessageResponse("Success Approval"));
             } else if (action.equals("DECLINE")) {
-                if(category.getState().equals("Pending for deletion")){
+                if(category.getState().equals(PENDINGDELETION)){
                     log.info("request completed, product save by admin, with requestId: {}", requestId);
                     category.setState("PENDING");
                     categoryRepository.save(category);

@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.challenge.tteapp.model.Constants.PENDINGDELETION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -128,6 +129,8 @@ class AdminControllerTest {
         testDeclinedProductAndCategory();
         testInvalidAction();
         testInvalidActionWithNullId();
+        testPendingProductAndCategoryApproved();
+        testPendingProductAndCategoryDecline();
     }
 
     private void testSuccessfulApproval() {
@@ -147,6 +150,42 @@ class AdminControllerTest {
 
         Product product = preparePendingProduct();
         Category category = preparePendingCategory();
+
+        lenient().when(productRepository.findProductId(anyLong())).thenReturn(product);
+        lenient().when(categoryRepository.findCategoryId(anyLong())).thenReturn(category);
+
+        ResponseEntity<MessageResponse> response1 = adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
+        assertEquals(HttpStatus.OK, response1.getStatusCode());
+
+        ResponseEntity<MessageResponse> response2 = adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+
+    private void testPendingProductAndCategoryApproved() {
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("APPROVED");
+
+        Product product = preparePendingProduct();
+        product.setState(PENDINGDELETION);
+        Category category = preparePendingCategory();
+        category.setState(PENDINGDELETION);
+
+        lenient().when(productRepository.findProductId(anyLong())).thenReturn(product);
+        lenient().when(categoryRepository.findCategoryId(anyLong())).thenReturn(category);
+
+        ResponseEntity<MessageResponse> response1 = adminServiceImpl.approvalJobs(approvalAdminDTO, "product", "requestId");
+        assertEquals(HttpStatus.OK, response1.getStatusCode());
+
+        ResponseEntity<MessageResponse> response2 = adminServiceImpl.approvalJobs(approvalAdminDTO, "category", "requestId");
+        assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+
+    private void testPendingProductAndCategoryDecline() {
+        ApprovalAdminDTO approvalAdminDTO = prepareApprovalDTO("DECLINE");
+
+        Product product = preparePendingProduct();
+        product.setState(PENDINGDELETION);
+        Category category = preparePendingCategory();
+        category.setState(PENDINGDELETION);
 
         lenient().when(productRepository.findProductId(anyLong())).thenReturn(product);
         lenient().when(categoryRepository.findCategoryId(anyLong())).thenReturn(category);
