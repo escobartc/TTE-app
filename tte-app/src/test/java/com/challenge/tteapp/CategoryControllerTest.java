@@ -4,6 +4,7 @@ import com.challenge.tteapp.controller.AdminController;
 import com.challenge.tteapp.controller.CategoryController;
 import com.challenge.tteapp.model.Category;
 import com.challenge.tteapp.model.dto.CategoryDTO;
+import com.challenge.tteapp.model.dto.CategoryUpdate;
 import com.challenge.tteapp.model.response.*;
 import com.challenge.tteapp.repository.CategoryRepository;
 import com.challenge.tteapp.service.CategoryService;
@@ -95,5 +96,24 @@ class CategoryControllerTest {
 
         ResponseEntity<MessageResponse> response2 = categoryServiceimpl.deleteCategory(stringMap, "EMPLOYEE", "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
+    }
+
+
+    @Test
+    void updateCategoryTest(){
+        ResponseEntity<MessageResponse> successResponse = new ResponseEntity<>(new MessageResponse(), HttpStatus.CREATED);
+        CategoryUpdate categoryUpdate = new CategoryUpdate();
+        categoryUpdate.setId(1L);
+        categoryUpdate.setName("name");
+
+        lenient().when(categoryService.updateCategory(eq(categoryUpdate),anyString())).thenReturn(successResponse);
+        categoryController.updateCategory(categoryUpdate);
+        assertThrows(HttpClientErrorException.class, () -> {
+            categoryServiceimpl.updateCategory(categoryUpdate, "requestId");
+        });
+        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(new Category()));
+        ResponseEntity<MessageResponse> response = categoryServiceimpl.updateCategory(categoryUpdate, "requestId");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
     }
 }

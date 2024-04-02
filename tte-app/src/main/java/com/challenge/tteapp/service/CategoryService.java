@@ -1,6 +1,7 @@
 package com.challenge.tteapp.service;
 
 import com.challenge.tteapp.model.dto.CategoryDTO;
+import com.challenge.tteapp.model.dto.CategoryUpdate;
 import com.challenge.tteapp.model.response.AllCategoriesResponse;
 import com.challenge.tteapp.model.response.CategoryResponse;
 import com.challenge.tteapp.model.response.MessageResponse;
@@ -15,4 +16,6 @@ public interface CategoryService {
     ResponseEntity<CategoryResponse> createCategory(CategoryDTO categoryDTO, String role, String requestId);
 
     ResponseEntity<MessageResponse> deleteCategory(Map<String, Long> requestBody, String role,String requestId);
+    ResponseEntity<MessageResponse> updateCategory(CategoryUpdate categoryDTO, String requestId);
+
 }

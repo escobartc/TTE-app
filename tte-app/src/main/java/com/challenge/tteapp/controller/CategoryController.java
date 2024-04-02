@@ -2,6 +2,7 @@ package com.challenge.tteapp.controller;
 
 import com.challenge.tteapp.configuration.InfoToken;
 import com.challenge.tteapp.model.dto.CategoryDTO;
+import com.challenge.tteapp.model.dto.CategoryUpdate;
 import com.challenge.tteapp.model.response.AllCategoriesResponse;
 import com.challenge.tteapp.model.response.CategoryResponse;
 import com.challenge.tteapp.model.response.MessageResponse;
@@ -45,6 +46,10 @@ public class CategoryController {
         return categoryService.deleteCategory(requestBody, role,requestId);
     }
 
-//    @PutMapping(path = "/category", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-
+    @PutMapping(path = "/category", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<MessageResponse> updateCategory(@RequestBody CategoryUpdate categoryDTO) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("JOIN TO TTE-APP, update categories with requestId: [{}]", requestId);
+        return categoryService.updateCategory(categoryDTO, requestId);
+    }
 }

@@ -2,6 +2,7 @@ package com.challenge.tteapp.service.impl;
 
 import com.challenge.tteapp.model.Category;
 import com.challenge.tteapp.model.dto.CategoryDTO;
+import com.challenge.tteapp.model.dto.CategoryUpdate;
 import com.challenge.tteapp.model.response.AllCategoriesResponse;
 import com.challenge.tteapp.model.response.CategoryResponse;
 import com.challenge.tteapp.model.response.MessageResponse;
@@ -68,6 +69,17 @@ public class CategoryServiceImpl implements CategoryService {
                 categoryRepository.save(existingCategory);
                 return new ResponseEntity<>(new MessageResponse("Category state changed to Pending for deletion"), HttpStatus.OK);
             }
+    }
+
+    @Override
+    public ResponseEntity<MessageResponse> updateCategory(CategoryUpdate categoryDTO, String requestId) {
+        Optional<Category> category = categoryRepository.findById(categoryDTO.getId());
+        if(category.isEmpty()){
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Category with provided ID not found");
+        }else{
+            categoryRepository.updateCategory(categoryDTO.getId(), categoryDTO.getName());
+            return new ResponseEntity<>(new MessageResponse("Category name Update"), HttpStatus.OK);
+        }
     }
 
     private static List<AllCategoriesResponse> mapToCategoryDTO(List<Category> categoriesResponse) {
