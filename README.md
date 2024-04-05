@@ -30,7 +30,7 @@ Our CD pipeline automates the deployment process for new changes to the main bra
 - JaCoCo: Code coverage tool used to assess the comprehensiveness of our test suite.
 - SonarCloud: Continuous code quality analysis tool used to detect and address code issues, vulnerabilities, and technical debt.
 
-##Testing
+## Testing
 
 You can view the metrics of our application at the following link: [SonarCloud Metrics](https://sonarcloud.io/summary/overall?id=escobartc_TTE-app)
 
