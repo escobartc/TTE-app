@@ -4,6 +4,7 @@ import com.challenge.tteapp.model.*;
 import com.challenge.tteapp.model.dto.*;
 import com.challenge.tteapp.model.response.*;
 import com.challenge.tteapp.processor.JwtService;
+import com.challenge.tteapp.processor.PasswordGenerator;
 import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.repository.*;
 import com.challenge.tteapp.service.UserService;
@@ -42,13 +43,13 @@ public class UserServiceImpl implements UserService {
     private final OrderProductsRepository orderProductsRepository;
 
     @Override
-    public ResponseEntity<LoginResponse> loginUser(LogInOutUser logInOutUser, String requestId) {
+    public ResponseEntity<LoginResponse> loginUser(LogInUser logInUser, String requestId) {
         log.info("Login user, requestId: [{}]", requestId);
         try {
-            User userAuth = userRepository.findElement(logInOutUser.getEmail());
+            User userAuth = userRepository.findElement(logInUser.getEmail());
             if (userAuth == null) throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user does not exist");
             String name = userAuth.getUsername();
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInUser.getEmail(), logInUser.getPassword()));
             if (userAuth.getState().equals(1)) {
                 log.warn("The user is already logged in, requestId: [{}]", requestId);
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user is already logged in");
@@ -59,7 +60,7 @@ public class UserServiceImpl implements UserService {
             }
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setUsername(name);
-            loginResponse.setEmail(logInOutUser.getEmail());
+            loginResponse.setEmail(logInUser.getEmail());
             loginResponse.setToken(jwtService.getToken(userAuth));
             return new ResponseEntity<>(loginResponse, HttpStatus.OK);
         } catch (AuthenticationException e) {
@@ -94,16 +95,20 @@ public class UserServiceImpl implements UserService {
         shopper.setPassword(passwordEncoder.encode(shopperDTO.getPassword()));
         shopper.setRole("CUSTOMER");
         shopper.setState(0);
+        shopper.setNumQuestion(shopperDTO.getNumRes());
+        shopper.setResponse(shopperDTO.getResponse());
         return shopper;
     }
 
     @Override
-    public ResponseEntity<StatusResponse> logoutUser(LogInOutUser logInOutUser, String requestId) {
+    public ResponseEntity<StatusResponse> logoutUser(LogOutUser logOutUser,String email, String requestId) {
         try {
             log.info("Logout user , requestId: [{}]", requestId);
-            User user = userRepository.findElement(logInOutUser.getEmail());
+            User user = userRepository.findElement(logOutUser.getEmail());
             String name = user.getUsername();
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(logInOutUser.getEmail(), logInOutUser.getPassword()));
+            if(!email.equals(logOutUser.getEmail())){
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The user not is correct");
+            }
             if (user.getState().equals(1)) {
                 user.setState(0);
                 user.setUsername(name);
@@ -119,6 +124,21 @@ public class UserServiceImpl implements UserService {
             };
         }
     }
+
+    @Override
+    public ResponseEntity<StatusResponse> forgotPass(ForgotPass forgotPass,String requestId) {
+            log.info("forgotPass user , requestId: [{}]", requestId);
+            User user = userRepository.findElement(forgotPass.getEmail());
+            if(user.getResponse().equals(forgotPass.getResponse()) && user.getNumQuestion().equals(forgotPass.getNumRes())){
+            String newPass = PasswordGenerator.generatePassword(15);
+            user.setPassword(passwordEncoder.encode(newPass));
+            userRepository.save(user);
+            log.info("forgotPass user: {} successful , requestId: [{}]", user.getName(), requestId);
+            return new ResponseEntity<>(new StatusResponse(newPass), HttpStatus.OK);
+            }else{
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "The data user is incorrect");
+            }
+        }
 
     @Override
     public ResponseEntity<WishListResponse> retrieverList(String email, String requestId) {
