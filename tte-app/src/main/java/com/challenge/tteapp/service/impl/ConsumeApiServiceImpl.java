@@ -33,8 +33,9 @@ public class ConsumeApiServiceImpl {
     public void consumeApi() {
         String requestId = UUID.randomUUID().toString();
         log.info("Consume FAKESTORE API, with requestId: [{}]", requestId);
-//        ResponseEntity<Object[]> responseEntity = restTemplate.getForEntity(dataConfig.getPathStore(), Object[].class);
-//        Object[] objects = responseEntity.getBody();
+
+        ResponseEntity<Object[]> responseEntity = restTemplate.getForEntity(dataConfig.getPathStore(), Object[].class);
+        Object[] objects = responseEntity.getBody();
 //        for (Object obj : objects) {
 //        ProductDTOS productDTO = objectMapper.convertValue(obj, ProductDTOS.class);
 //        ProductDTO modifiedProductDTO = prepareProductDTO(productDTO);

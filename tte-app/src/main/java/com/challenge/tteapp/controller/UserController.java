@@ -34,17 +34,25 @@ public class UserController {
     }
 
     @PostMapping(path = "/login", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<LoginResponse> loginUser(@RequestBody @Valid LogInOutUser user) {
+    public ResponseEntity<LoginResponse> loginUser(@RequestBody @Valid LogInUser user) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, login user, with requestId: [{}]", requestId);
         return userService.loginUser(user, requestId);
     }
 
     @PostMapping(path = "/logout", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<StatusResponse> logoutUser(@RequestBody @Valid LogInOutUser user) {
+    public ResponseEntity<StatusResponse> logoutUser(@RequestBody @Valid LogOutUser user) {
+        String requestId = UUID.randomUUID().toString();
+        String email = InfoToken.getName();
+        log.info("JOIN TO TTE-APP, logout user, with requestId: [{}]", requestId);
+        return userService.logoutUser(user,email, requestId);
+    }
+
+        @PostMapping(path = "/forgotPassword", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<StatusResponse> forgotPassword(@RequestBody @Valid ForgotPass forgotPass) {
         String requestId = UUID.randomUUID().toString();
         log.info("JOIN TO TTE-APP, logout user, with requestId: [{}]", requestId);
-        return userService.logoutUser(user, requestId);
+        return userService.forgotPass(forgotPass, requestId);
     }
 
     @GetMapping(path = "/user/wishlist")

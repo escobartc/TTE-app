@@ -44,7 +44,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/product").permitAll()
                                 .requestMatchers("/api/auth").permitAll()
                                 .requestMatchers("/api/login").permitAll()
-                                .requestMatchers("/api/logout").permitAll()
+                                .requestMatchers("/api/forgotPassword").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/category").permitAll()
                                 .requestMatchers(AUTH_WHITELIST).permitAll()
                                 .anyRequest().authenticated()
