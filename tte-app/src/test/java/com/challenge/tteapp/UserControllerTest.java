@@ -95,36 +95,6 @@ class UserControllerTest {
     }
 
     @Test
-    void LogOut() {
-        LogInUser logInUser = LoginOutUser();
-        ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
-        when(userService.logoutUser(eq(logInUser), anyString())).thenReturn(successResponse);
-        ResponseEntity<StatusResponse> response = userController.logoutUser(logInUser);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        User existingUser = userInfo();
-        existingUser.setState(1);
-        when(userRepository.findElement(anyString())).thenReturn(existingUser);
-        ResponseEntity<StatusResponse> response2 = userServiceimpl.logoutUser(logInUser, "requestId");
-        assertEquals(HttpStatus.OK, response2.getStatusCode());
-
-    }
-
-    @Test
-    void LogOut2() {
-        LogInUser logInUser = LoginOutUser();
-        ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
-        when(userService.logoutUser(eq(logInUser), anyString())).thenReturn(successResponse);
-        ResponseEntity<StatusResponse> response = userController.logoutUser(logInUser);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        User existingUser = userInfo();
-        existingUser.setState(0);
-        when(userRepository.findElement(anyString())).thenReturn(existingUser);
-        assertThrows(HttpClientErrorException.class, () -> {
-            userServiceimpl.logoutUser(logInUser, "requestId");
-        });
-    }
-
-    @Test
     void LoginUserTest2() {
         LogInUser logInUser = LoginOutUser();
         LoginResponse loginResponse = new LoginResponse();

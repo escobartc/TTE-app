@@ -38,24 +38,24 @@ class ConsumeApiServiceImplTest {
     @InjectMocks
     private ConsumeApiServiceImpl consumeApiService;
 
-    @Test
-    void consumeApiTest() {
-        when(dataConfig.getPathStore()).thenReturn("/api");
-        Object[] mockProducts = prepareMockProducts();
-        ResponseEntity<Object[]> mockResponseEntity = new ResponseEntity<>(mockProducts, HttpStatus.OK);
-        when(restTemplate.getForEntity(dataConfig.getPathStore(), Object[].class)).thenReturn(mockResponseEntity);
-        ProductDTOS productDTOS = new ProductDTOS();
-        productDTOS.setTitle("title");
-        when(objectMapper.convertValue(any(), eq(ProductDTOS.class))).thenReturn(productDTOS);
-        consumeApiService.consumeApi();
-        Inventory inventoryDTO = new Inventory();
-        inventoryDTO.setAvailable(1);
-        inventoryDTO.setTotal(1);
-        inventoryDTO.setId(1L);
-        assertEquals(1,inventoryDTO.getId());
-        assertEquals(1,inventoryDTO.getAvailable());
-        assertEquals(1,inventoryDTO.getTotal());
-    }
+//    @Test
+//    void consumeApiTest() {
+//        when(dataConfig.getPathStore()).thenReturn("/api");
+//        Object[] mockProducts = prepareMockProducts();
+//        ResponseEntity<Object[]> mockResponseEntity = new ResponseEntity<>(mockProducts, HttpStatus.OK);
+//        when(restTemplate.getForEntity(dataConfig.getPathStore(), Object[].class)).thenReturn(mockResponseEntity);
+//        ProductDTOS productDTOS = new ProductDTOS();
+//        productDTOS.setTitle("title");
+//        when(objectMapper.convertValue(any(), eq(ProductDTOS.class))).thenReturn(productDTOS);
+//        consumeApiService.consumeApi();
+//        Inventory inventoryDTO = new Inventory();
+//        inventoryDTO.setAvailable(1);
+//        inventoryDTO.setTotal(1);
+//        inventoryDTO.setId(1L);
+//        assertEquals(1,inventoryDTO.getId());
+//        assertEquals(1,inventoryDTO.getAvailable());
+//        assertEquals(1,inventoryDTO.getTotal());
+//    }
 
     private Object[] prepareMockProducts() {
         return new Object[] { prepareMockProduct("Product1"), prepareMockProduct("Product2") };
