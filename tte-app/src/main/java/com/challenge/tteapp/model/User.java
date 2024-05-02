@@ -28,6 +28,9 @@ public class User implements UserDetails {
     private String password;
     private String role;
     private Integer state;
+    @Column(name = "num_question")
+    private Integer numQuestion;
+    private String response;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

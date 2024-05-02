@@ -12,9 +12,11 @@ import java.util.List;
 
 public interface UserService {
 
-    ResponseEntity<LoginResponse> loginUser(LogInOutUser logInOutUser, String requestId);
+    ResponseEntity<LoginResponse> loginUser(LogInUser logInUser, String requestId);
 
-    ResponseEntity<StatusResponse> logoutUser(LogInOutUser logInOutUser, String requestId);
+    ResponseEntity<StatusResponse> logoutUser(LogOutUser logInUser,String email, String requestId);
+
+    ResponseEntity<StatusResponse> forgotPass(ForgotPass forgotPass, String requestId);
 
     ResponseEntity<UserResponse> registerShopper(ShopperDTO shopperDTO, String requestId);
 

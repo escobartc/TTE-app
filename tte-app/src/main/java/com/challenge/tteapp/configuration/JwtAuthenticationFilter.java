@@ -88,6 +88,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || endpoint.startsWith("/api/cart") || endpoint.startsWith("/api/cart/add")
                 || endpoint.startsWith("/cart/checkout")) {
             return role.equals(CUSTOMER);
+        } else if(endpoint.startsWith("/api/logout")){
+            return role.equals(CUSTOMER) || role.equals(EMPLOYEE);
         } else {
             return false;
         }

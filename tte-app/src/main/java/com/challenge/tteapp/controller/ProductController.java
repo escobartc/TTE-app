@@ -73,7 +73,8 @@ public class ProductController {
         try {
             String requestId = UUID.randomUUID().toString();
             log.info("JOIN TO TTE-APP with requestId: [{}]", requestId);
-            verifyAuthorizationForCreation(product, authentication);
+            String role = InfoToken.getRole();
+            product.setState((role.equals("EMPLOYEE")) ? "Pending" : "Approved");
             ResponseEntity<Object> response = productService.saveProduct(product, requestId);
             Map<String, Object> responseBody = getStringObjectMap(response);
             return ResponseEntity.status(response.getStatusCode()).body(responseBody);
@@ -197,15 +198,6 @@ public class ProductController {
         return existingProduct;
     }
 
-
-    private static void verifyAuthorizationForCreation(ProductDTO product, Authentication authentication) {
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-
-        boolean isEmployee = authorities.stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_employee"));
-
-        product.setState((isEmployee) ? "Pending" : "Approved");
-    }
 
     private static Map<String, Object> getStringObjectMap(ResponseEntity<Object> response) {
         Long productId = null;

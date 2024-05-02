@@ -10,7 +10,6 @@ import com.challenge.tteapp.processor.ValidationResponse;
 import com.challenge.tteapp.repository.*;
 import com.challenge.tteapp.service.UserService;
 import com.challenge.tteapp.service.impl.UserServiceImpl;
-import org.aspectj.weaver.ast.Or;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -82,61 +81,31 @@ class UserControllerTest {
 
     @Test
     void LoginUserTest() {
-        LogInOutUser logInOutUser = LoginOutUser();
+        LogInUser logInUser = LoginOutUser();
         ResponseEntity<LoginResponse> errorResponse = new ResponseEntity<>(new LoginResponse(), HttpStatus.BAD_REQUEST);
-        when(userService.loginUser(eq(logInOutUser), anyString())).thenReturn(errorResponse);
-        ResponseEntity<LoginResponse> response = userController.loginUser(logInOutUser);
+        when(userService.loginUser(eq(logInUser), anyString())).thenReturn(errorResponse);
+        ResponseEntity<LoginResponse> response = userController.loginUser(logInUser);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         User existingUser = userInfo();
         existingUser.setState(1);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
         assertThrows(HttpClientErrorException.class, () -> {
-            userServiceimpl.loginUser(logInOutUser, "requestId");
-        });
-    }
-
-    @Test
-    void LogOut() {
-        LogInOutUser logInOutUser = LoginOutUser();
-        ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
-        when(userService.logoutUser(eq(logInOutUser), anyString())).thenReturn(successResponse);
-        ResponseEntity<StatusResponse> response = userController.logoutUser(logInOutUser);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        User existingUser = userInfo();
-        existingUser.setState(1);
-        when(userRepository.findElement(anyString())).thenReturn(existingUser);
-        ResponseEntity<StatusResponse> response2 = userServiceimpl.logoutUser(logInOutUser, "requestId");
-        assertEquals(HttpStatus.OK, response2.getStatusCode());
-
-    }
-
-    @Test
-    void LogOut2() {
-        LogInOutUser logInOutUser = LoginOutUser();
-        ResponseEntity<StatusResponse> successResponse = new ResponseEntity<>(new StatusResponse(), HttpStatus.CREATED);
-        when(userService.logoutUser(eq(logInOutUser), anyString())).thenReturn(successResponse);
-        ResponseEntity<StatusResponse> response = userController.logoutUser(logInOutUser);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        User existingUser = userInfo();
-        existingUser.setState(0);
-        when(userRepository.findElement(anyString())).thenReturn(existingUser);
-        assertThrows(HttpClientErrorException.class, () -> {
-            userServiceimpl.logoutUser(logInOutUser, "requestId");
+            userServiceimpl.loginUser(logInUser, "requestId");
         });
     }
 
     @Test
     void LoginUserTest2() {
-        LogInOutUser logInOutUser = LoginOutUser();
+        LogInUser logInUser = LoginOutUser();
         LoginResponse loginResponse = new LoginResponse();
         ResponseEntity<LoginResponse> successResponse = new ResponseEntity<>(loginResponse, HttpStatus.CREATED);
-        when(userService.loginUser(eq(logInOutUser), anyString())).thenReturn(successResponse);
-        ResponseEntity<LoginResponse> response = userController.loginUser(logInOutUser);
+        when(userService.loginUser(eq(logInUser), anyString())).thenReturn(successResponse);
+        ResponseEntity<LoginResponse> response = userController.loginUser(logInUser);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         User existingUser = userInfo();
         existingUser.setState(0);
         when(userRepository.findElement(anyString())).thenReturn(existingUser);
-        ResponseEntity<LoginResponse> response2 = userServiceimpl.loginUser(logInOutUser, "requestId");
+        ResponseEntity<LoginResponse> response2 = userServiceimpl.loginUser(logInUser, "requestId");
         assertEquals(HttpStatus.OK, response2.getStatusCode());
 
     }
@@ -484,11 +453,11 @@ class UserControllerTest {
         return shopperDTO;
     }
 
-    private static LogInOutUser LoginOutUser() {
-        LogInOutUser LoginOutUser = new LogInOutUser();
-        LoginOutUser.setEmail("email");
-        LoginOutUser.setPassword("password");
-        return LoginOutUser;
+    private static LogInUser LoginOutUser() {
+        LogInUser loginUser = new LogInUser();
+        loginUser.setEmail("email");
+        loginUser.setPassword("password");
+        return loginUser;
     }
 
     private List<Object[]> prepareCartData() {

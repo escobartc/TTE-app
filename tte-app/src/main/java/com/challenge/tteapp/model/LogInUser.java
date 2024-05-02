@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class LogInOutUser {
+public class LogInUser {
 
     @NotEmpty(message = "Email cannot be empty")
     @Email(message = "Please provide a valid email address")
